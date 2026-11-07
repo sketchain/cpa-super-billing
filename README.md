@@ -342,6 +342,29 @@ plugins/cpa-super-billing-state-v1.db.bak-u24-to-u25-cc4-20261107T120000
 
 备份失败时（例如目录不可写、磁盘空间不足）不会迁移：插件注册失败，CLIProxyAPI 日志写明原因和数据库路径，处理后重启即可。迁移本身失败时，日志会给出这次的备份路径。
 
+### 运行中查看数据库
+
+CLIProxyAPI 运行时，只能用只读方式查看活库：
+
+```sh
+sqlite3 -readonly plugins/cpa-super-billing-state-v1.db "SELECT count(*) FROM request_events"
+sqlite3 'file:plugins/cpa-super-billing-state-v1.db?mode=ro' "SELECT count(*) FROM request_events"
+```
+
+运行中不要对活库写入，不要执行 `.recover` 或把 `.backup` 写回原库，也不要用其他程序复制、改名或删除 `.db`、`-wal`、`-shm`。v0.3.0 及更早的插件会丢失自己在数据库上的文件锁（见 Changelog 的 v0.3.1）：插件运行中，只要有人用 SQLite 3.51 以下的 sqlite3（如 Debian 13 自带的 3.46.1）以普通方式查询一次活库，`-wal`、`-shm` 就会被删除，之后的写入只进入已删除的文件。
+
+自查是否处于这种状态（Docker 部署在容器内执行，CLIProxyAPI 通常是 PID 1）：
+
+```sh
+docker compose exec cli-proxy-api ls -l /proc/1/fd | grep deleted
+# 非 Docker 部署：ls -l /proc/<CLIProxyAPI 的 PID>/fd | grep deleted
+```
+
+输出里出现 `…-state-v1.db-wal (deleted)` 或 `…-state-v1.db-shm (deleted)` 即是。v0.3.1 起插件每分钟最多自检一次（在请求计费和打开管理页时），发现后写一条错误日志、在管理页顶部和「订阅分账」页告警，并持续把已删除 WAL 里的数据 checkpoint 回主库。处于这种状态时：
+
+- 只能优雅停止 CLIProxyAPI（`docker compose stop`，或正常停止服务），让插件关库时把数据写回主库，然后再启动；不要 `docker kill`、`kill -9`，也不要缩短停止超时，强杀会丢失已删除 WAL 里的数据。
+- 停止之前，不要启动另一个使用同一数据库的 CLIProxyAPI，也不要对这个库写入：两份 WAL 同时写同一个库会损坏表结构（如 `invalid rootpage`）。
+
 ### 数据库损坏时
 
 插件注册失败、日志出现 `malformed database schema`、`database disk image is malformed` 或 `file is not a database` 时，数据库文件已经损坏。日志会同时列出同目录下可用的迁移备份。
