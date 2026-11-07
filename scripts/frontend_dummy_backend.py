@@ -1959,6 +1959,28 @@ def cc_auth_summaries():
 
 
 CC_LOADED = [True]
+# Set by --database-alert: the alert the plugin reports while the database's WAL files are deleted.
+DATABASE_ALERT = [None]
+DATABASE_ALERT_DB = "/srv/cli-proxy-api/plugins/cpa-super-billing-state-v1.db"
+
+
+def database_alert_view():
+    """Mirrors databaseAlertView: the alert fields with a localizable message and its English text."""
+    failed = DATABASE_ALERT[0] == "wal-deleted-checkpoint-failed"
+    files = f"{DATABASE_ALERT_DB}-wal, {DATABASE_ALERT_DB}-shm"
+    text = ("The write-ahead log files of the billing database were deleted while the plugin was running "
+            f"({files}), and recent writes exist only in the deleted files. "
+            + ("Copying them back into the database file has not succeeded yet and is retried every minute. " if failed
+               else "The plugin has copied them back into the database file. ")
+            + "Stop CLIProxyAPI gracefully (docker compose stop or a normal service stop) and start it again; do not kill it")
+    view = {"path": DATABASE_ALERT_DB, "detected_at": iso(NOW - timedelta(minutes=7)),
+            "missing": [DATABASE_ALERT_DB + "-wal", DATABASE_ALERT_DB + "-shm"], "checkpoint_at": iso(NOW - timedelta(seconds=40)),
+            "message": {"message_key": "backend.database_wal_deleted_" + ("checkpoint_failed" if failed else "checkpointed"),
+                        "message_params": {"v0": files}},
+            "text": text}
+    if failed:
+        view["checkpoint_error"] = "database is locked"
+    return view
 
 
 def cc_fixed_scope(scope):
@@ -2285,7 +2307,10 @@ def route_rows():
 
 def payload_for(path, query):
     if path == f"{API_BASE}/cc":
-        return cc_payload()
+        payload = cc_payload()
+        if DATABASE_ALERT[0]:
+            payload["database_alert"] = database_alert_view()
+        return payload
     if path == f"{API_BASE}/cc/trend":
         return cc_trend_payload(query.get("auth_index", [""])[0])
     if path == f"{API_BASE}/cc/forecast":
@@ -2415,6 +2440,10 @@ class Handler(BaseHTTPRequestHandler):
         body = json.dumps(payload, ensure_ascii=False).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        # The plugin marks every management response, but not the API key pages' resources, while the alert lasts.
+        path = urlparse(self.path).path
+        if DATABASE_ALERT[0] and (path == API_BASE or path.startswith(API_BASE + "/")):
+            self.send_header("X-Billing-Database-Alert", DATABASE_ALERT[0])
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -2985,6 +3014,13 @@ def main():
         help="Preview a CC fixed key left on a shared quota plan by older settings.",
     )
     parser.add_argument(
+        "--database-alert",
+        nargs="?",
+        const="wal-deleted",
+        choices=("wal-deleted", "wal-deleted-checkpoint-failed"),
+        help="Report the billing database's WAL files as deleted (optionally with a failing checkpoint).",
+    )
+    parser.add_argument(
         "--allow-api-key-quota-reset",
         action="store_true",
         help="Allow API key users to reset Codex auth file quotas.",
@@ -2995,6 +3031,7 @@ def main():
     Handler.initial_theme = args.theme
     Handler.allow_api_key_quota_reset = args.allow_api_key_quota_reset
     CC_LOADED[0] = not args.cc_not_loaded
+    DATABASE_ALERT[0] = args.database_alert
     if args.cc_fixed_key_on_shared_plan:
         fixed = next(key for key in LIVE_KEYS if cc_fixed_scope(key["scope"]))
         fixed["plan_id"] = "project-credit"
