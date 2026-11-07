@@ -43,6 +43,9 @@ type Store struct {
 	errMu     sync.Mutex
 	lastError string
 
+	// databaseFiles watches the open database's write-ahead log files.
+	databaseFiles databaseFileWatch
+
 	open                    func(string) (Repository, error)
 	downloadReferencePrices func(context.Context) ([]byte, error)
 	// copyDatabase copies a database file to a new path, leaving the source
@@ -155,6 +158,7 @@ func (s *Store) Configure(cfg Config) error {
 	s.repo = repo
 	s.path = path
 	s.dirty = Changes{}
+	s.databaseFiles.reset()
 	s.mu.Unlock()
 	previousReferences.close()
 	if previous != nil {
@@ -275,6 +279,7 @@ func (s *Store) Close() {
 	s.repo = nil
 	s.path = ""
 	s.dirty = Changes{}
+	s.databaseFiles.reset()
 	s.activeRequests = make(map[string]concurrencySlot)
 	s.activeByScope = make(map[string]int)
 	s.mu.Unlock()

@@ -197,6 +197,23 @@ async function recalledCredential(role, includeSession = false) {
 class AuthError extends UIError {}
 class StaleRequestError extends Error {}
 
+// The plugin marks each management response while the billing database's WAL
+// files are deleted; the alert stays above every admin page until a restart.
+const DATABASE_ALERT_MESSAGES = {
+  "wal-deleted": "ui.database_wal_deleted",
+  "wal-deleted-checkpoint-failed": "ui.database_wal_deleted_checkpoint_failed"
+};
+let databaseAlertState = "";
+
+function showDatabaseAlert(state) {
+  const next = Object.hasOwn(DATABASE_ALERT_MESSAGES, state ?? "") ? state : "";
+  if (next === databaseAlertState) return;
+  databaseAlertState = next;
+  const target = $("admin-database-alert");
+  target.classList.toggle("show", !!next);
+  if (next) setText(target, m(DATABASE_ALERT_MESSAGES[next])); else target.replaceChildren();
+}
+
 async function api(method, path, body, opts) {
   const generation = sessionGeneration;
   const init = { method, cache: "no-store", headers: { ...opts?.headers, Authorization: "Bearer " + (opts?.key ?? authKey) } };
@@ -214,6 +231,7 @@ async function api(method, path, body, opts) {
     resp = await fetch(location.origin + path, init);
     text = await resp.text();
     if (generation !== sessionGeneration) throw new StaleRequestError();
+    if (path.startsWith(PLUGIN_BASE + "/")) showDatabaseAlert(resp.headers.get("X-Billing-Database-Alert"));
   } catch (error) {
     if (generation !== sessionGeneration) throw new StaleRequestError();
     if (controller.signal.aborted) throw new UIError(m("ui.request_timed_out"));

@@ -24,6 +24,9 @@ type DB struct {
 	db      *sql.DB
 	path    string
 	notices []billing.RepositoryNotice
+	// walFiles identifies the -wal and -shm files this database opened with;
+	// nil when they could not be identified and the check is off.
+	walFiles *walFileRecord
 }
 
 // StoredQuotaHeaders reads the quota report out of the headers a request stored
@@ -47,6 +50,7 @@ func Open(path string, storedHeaders StoredQuotaHeaders, opts ...Option) (*DB, e
 		_ = database.Close()
 		return nil, explainDamage(database.path, err)
 	}
+	database.recordWALFiles()
 	return database, nil
 }
 
