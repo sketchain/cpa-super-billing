@@ -1269,5 +1269,9 @@
   "cc.global_parameters": "Global parameters",
   "cc.trend_window_7d_note": "No 5-hour window: there is no k evidence, and the weekly total comes from the 7-day segments directly.",
   "cc.trend_needs_k_note": "No k is set or estimated, so the weekly total line is not drawn.",
-  "cc.trend_tip_weekly_window": "Weekly total from 7-day segments: {v0}"
+  "cc.trend_tip_weekly_window": "Weekly total from 7-day segments: {v0}",
+  "backend.database_wal_deleted_checkpointed": "The write-ahead log files of the billing database were deleted while the plugin was running ({v0}), and recent writes exist only in the deleted files. The plugin has copied them back into the database file. Stop CLIProxyAPI gracefully (docker compose stop or a normal service stop) and start it again; do not kill it.",
+  "backend.database_wal_deleted_checkpoint_failed": "The write-ahead log files of the billing database were deleted while the plugin was running ({v0}), and recent writes exist only in the deleted files. Copying them back into the database file has not succeeded yet and is retried every minute. Stop CLIProxyAPI gracefully (docker compose stop or a normal service stop) and start it again; do not kill it.",
+  "ui.database_wal_deleted": "The billing database's WAL files were deleted while the plugin was running, and recent writes exist only in the deleted files held in memory. The plugin has copied the data back into the main database. Restart CLIProxyAPI with docker compose stop or another graceful stop; do not kill it. Details are in the plugin logs.",
+  "ui.database_wal_deleted_checkpoint_failed": "The billing database's WAL files were deleted while the plugin was running, and recent writes exist only in the deleted files held in memory. Copying the data back into the main database has not succeeded yet and is retried every minute. Restart CLIProxyAPI with docker compose stop or another graceful stop; do not kill it. Details are in the plugin logs."
 }

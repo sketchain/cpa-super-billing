@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.3.1
+
+### 升级须知
+
+- 修复数据库文件锁丢失：v0.3.0 及以前的所有版本（含改名前的 cpa-cc-billing）打开参考价格连接时，会在 SQLite 之外打开再关闭一次数据库文件，按 POSIX 规则把本进程在数据库上的文件锁全部释放，此后整个进程运行期间都不再持锁。触发条件：插件运行中，有人用 SQLite 3.51 以下的 sqlite3（如 Debian 13 自带的 3.46.1）以普通方式对活库查询一次（只读查询也算），该进程关库时会误认为自己是最后一个连接，把 `-wal`、`-shm` 刷回主库后删除。
+- 影响：此后插件的所有写入只进入已删除的 WAL 文件。优雅停止时数据会写回主库，不丢失；进程被强杀（`docker kill`、`kill -9`、停止超时、崩溃）会静默丢失这段时间的全部数据，数据库回到 WAL 被删除时的状态；如果在此期间还有别的进程写同一个库（另一个 CLIProxyAPI 实例、宿主机上的写操作等），会出现两份 WAL 写同一个库，导致 `malformed database schema … invalid rootpage` 等结构损坏。
+- 升级前先自查：`docker compose exec cli-proxy-api ls -l /proc/1/fd | grep deleted`，如果看到 `-state-v1.db-wal (deleted)`，必须用 `docker compose stop` 优雅停止后再替换插件，不要强杀。升级本身不改数据库结构，无需迁移，也不会生成迁移备份。
+- CLIProxyAPI 运行时查看活库请只用 `sqlite3 -readonly <db>` 或 `sqlite3 'file:<db>?mode=ro'`，不要写入或执行 `.recover`；说明见 README「运行中查看数据库」。
+
+### 后端
+
+- 创建数据库文件时只在文件不存在时创建，已存在的数据库、`-wal`、`-shm` 只改权限、不再打开，插件进程在运行期间始终持有 SQLite 的文件锁，旧版 sqlite3 关库时不会再删除活的 `-wal`、`-shm`。
+- 新增运行时自检：每分钟最多一次（在请求计费和管理接口请求时同步进行），检查数据库的 `-wal`、`-shm` 是否被删除或替换；发现后写一条错误日志（同一次异常只写一次），之后每分钟在主连接上执行 `PRAGMA wal_checkpoint(TRUNCATE)`，把已删除 WAL 里的数据刷回主库，并在结果变化时记录 busy/log/checkpointed。自检不重开连接，也不创建或删除任何文件，需由运维优雅重启 CLIProxyAPI 恢复。切换 `state_file` 时按新库重新检查，Windows 上不检查。
+
+### 前端
+
+- 自检发现异常时，管理页所有页签顶部显示告警，「订阅分账」页同时列出被删除的文件，提示用 `docker compose stop` 或正常停止方式重启 CLIProxyAPI、不要强杀；CLIProxyAPI 重启后告警消失。
+
 ## v0.3.0
 
 ### 升级须知

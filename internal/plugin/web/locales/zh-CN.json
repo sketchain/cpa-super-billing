@@ -1269,5 +1269,9 @@
   "cc.global_parameters": "全局参数",
   "cc.trend_window_7d_note": "没有 5 小时窗口：没有 k 证据，周总额直接由 7d 切段得出。",
   "cc.trend_needs_k_note": "没有设置或估算出 k，所以不画周总额曲线。",
-  "cc.trend_tip_weekly_window": "按 7d 切段得到的周总额：{v0}"
+  "cc.trend_tip_weekly_window": "按 7d 切段得到的周总额：{v0}",
+  "backend.database_wal_deleted_checkpointed": "数据库的 WAL 文件在运行中被删除（{v0}），最近的写入只在内存映射的已删除文件里；插件已把数据刷回主库。请用 docker compose stop 或正常停止方式重启 CLIProxyAPI，不要强杀。",
+  "backend.database_wal_deleted_checkpoint_failed": "数据库的 WAL 文件在运行中被删除（{v0}），最近的写入只在内存映射的已删除文件里；插件把数据刷回主库尚未成功，每分钟重试一次。请用 docker compose stop 或正常停止方式重启 CLIProxyAPI，不要强杀。",
+  "ui.database_wal_deleted": "数据库的 WAL 文件在运行中被删除，最近的写入只在内存映射的已删除文件里；插件已把数据刷回主库。请用 docker compose stop 或正常停止方式重启 CLIProxyAPI，不要强杀。详情见插件日志。",
+  "ui.database_wal_deleted_checkpoint_failed": "数据库的 WAL 文件在运行中被删除，最近的写入只在内存映射的已删除文件里；插件把数据刷回主库尚未成功，每分钟重试一次。请用 docker compose stop 或正常停止方式重启 CLIProxyAPI，不要强杀。详情见插件日志。"
 }

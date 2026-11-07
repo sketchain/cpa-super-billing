@@ -788,5 +788,17 @@
       "%q",
       "%s"
     ]
+  },
+  "The write-ahead log files of the billing database were deleted while the plugin was running (%s), and recent writes exist only in the deleted files. Copying them back into the database file has not succeeded yet and is retried every minute. Stop CLIProxyAPI gracefully (docker compose stop or a normal service stop) and start it again; do not kill it": {
+    "key": "backend.database_wal_deleted_checkpoint_failed",
+    "formats": [
+      "%s"
+    ]
+  },
+  "The write-ahead log files of the billing database were deleted while the plugin was running (%s), and recent writes exist only in the deleted files. The plugin has copied them back into the database file. Stop CLIProxyAPI gracefully (docker compose stop or a normal service stop) and start it again; do not kill it": {
+    "key": "backend.database_wal_deleted_checkpointed",
+    "formats": [
+      "%s"
+    ]
   }
 }

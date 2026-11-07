@@ -306,6 +306,29 @@ The name carries the old and new billing versions, the old and new CC versions (
 
 If the backup fails, for example because the directory is not writable or the disk is full, nothing is migrated: registration fails and the CLIProxyAPI log states the reason and the database path. Fix it and restart. If the migration itself fails, the log names the backup taken for it.
 
+### Inspecting the database while CLIProxyAPI runs
+
+While CLIProxyAPI runs, open the live database read-only only:
+
+```sh
+sqlite3 -readonly plugins/cpa-super-billing-state-v1.db "SELECT count(*) FROM request_events"
+sqlite3 'file:plugins/cpa-super-billing-state-v1.db?mode=ro' "SELECT count(*) FROM request_events"
+```
+
+Do not write to the live database, run `.recover` or `.backup` into it, or copy, rename or delete its `.db`, `-wal` or `-shm` files with other programs while it runs. Plugin v0.3.0 and earlier lose their file locks on the database (see v0.3.1 in the changelog): a single ordinary query by sqlite3 older than SQLite 3.51 (such as 3.46.1 in Debian 13) deletes the live `-wal` and `-shm` files, and every later write goes only into the deleted files.
+
+To check for this state (inside the container for Docker deployments, where CLIProxyAPI is usually PID 1):
+
+```sh
+docker compose exec cli-proxy-api ls -l /proc/1/fd | grep deleted
+# Without Docker: ls -l /proc/<CLIProxyAPI PID>/fd | grep deleted
+```
+
+Lines ending in `…-state-v1.db-wal (deleted)` or `…-state-v1.db-shm (deleted)` mean the files were deleted. From v0.3.1 the plugin checks for this at most once a minute (when it bills a request or serves the management page); when it finds it, it logs an error, shows an alert above every admin page and on the **Subscription split** page, and keeps checkpointing the deleted write-ahead log into the database file. In this state:
+
+- Stop CLIProxyAPI only gracefully (`docker compose stop` or a normal service stop) so the plugin writes the data back when it closes the database, then start it again. Do not `docker kill` or `kill -9` it or shorten the stop timeout: killing it loses what the deleted write-ahead log holds.
+- Until it has stopped, do not start another CLIProxyAPI on the same database or write to it: two write-ahead logs writing one database damage its structure (for example `invalid rootpage`).
+
 ### Damaged database
 
 If registration fails with `malformed database schema`, `database disk image is malformed` or `file is not a database`, the database file is damaged. The log also lists the migration backups found beside it.

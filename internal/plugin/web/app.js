@@ -383,9 +383,9 @@ function schedulePageTabLayout() {
 
 addEventListener("resize", schedulePageTabLayout);
 const pageTabResizeObserver = new ResizeObserver(schedulePageTabLayout);
-for (const element of document.querySelectorAll(".head, #admin-data-status, #account-data-status, .page-tabs-row, .page-tabs-row .tabs")) {
-  pageTabResizeObserver.observe(element, { box: "border-box" });
-}
+const pageTabLayoutElements =
+  ".head, #admin-database-alert, #admin-data-status, #account-data-status, .page-tabs-row, .page-tabs-row .tabs";
+for (const element of document.querySelectorAll(pageTabLayoutElements)) { pageTabResizeObserver.observe(element, { box: "border-box" }); }
 
 function updatePageControls(account, page) {
   const prefix = account ? "account-" : "";

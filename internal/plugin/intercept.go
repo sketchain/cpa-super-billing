@@ -229,6 +229,8 @@ func routingErrorResponse(sourceFormat, code, message string) RequestInterceptRe
 }
 
 func (a *App) handleUsage(raw []byte) ([]byte, error) {
+	// After the record is stored, so a checkpoint the check runs includes it.
+	defer a.store.CheckDatabaseFiles()
 	var record UsageRecord
 	if errUnmarshal := json.Unmarshal(raw, &record); errUnmarshal != nil {
 		return nil, fmt.Errorf("Parse usage record: %w", errUnmarshal)
