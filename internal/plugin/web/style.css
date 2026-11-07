@@ -13,6 +13,9 @@
   --analysis-grid-color: rgb(45 42 38 / 0.08);
   --border-primary: #d5d2cb;
   --border-hover: #cecac4;
+  /* Buttons, fields, dropdowns and toggles share one surface so controls side by side match. */
+  --control-bg: var(--bg-primary);
+  --control-border: var(--border-primary);
   --primary-color: #766858;
   --primary-hover: #655747;
   --primary-active: #655747;
@@ -54,8 +57,6 @@
   --analysis-color-5: var(--viz-failure);
   --analysis-color-6: #23a6c7;
   --analysis-segment-border: var(--bg-primary);
-  --notice-success-bg: color-mix(in srgb, var(--success-badge-text) 14%, var(--floating-surface));
-  --notice-error-bg: color-mix(in srgb, var(--failure-badge-text) 14%, var(--floating-surface));
   --shadow: 0 1px 2px 0 #00000014;
   --radius-md: 8px;
   --page-gap: 16px;
@@ -215,6 +216,8 @@
   --border-color: var(--app-border, #d8e5f2);
   --border-primary: var(--app-border-strong, var(--border-color));
   --border-hover: color-mix(in srgb, var(--primary-color) 28%, var(--border-color));
+  --control-bg: var(--app-input-bg, var(--app-surface-strong, var(--bg-primary)));
+  --control-border: var(--app-input-border, var(--border-primary));
   --primary-color: var(--color-primary, #3b82f6);
   --primary-hover: var(--color-primary-light-3, #60a5fa);
   --primary-active: var(--color-primary-dark-2, #2563eb);
@@ -257,7 +260,8 @@
   --analysis-segment-border: var(--app-surface, var(--bg-primary));
 }
 :root[data-cpamp-plugin-host="true"][data-theme="dark"] { --floating-shadow: 0 16px 34px rgb(0 0 0 / 0.55); }
-* { box-sizing: border-box; }
+/* Renders replace whole sections, leaving scroll anchoring no node to hold; WebKit (Safari 27+, every iOS browser) then jumps. */
+* { box-sizing: border-box; overflow-anchor: none; }
 body {
   margin: 0;
   background-color: var(--bg-secondary);
@@ -322,12 +326,12 @@ h2 { font-size: 15px; margin: 0 0 12px; }
 }
 button {
   appearance: none;
-  min-height: var(--button-min-height, 35px);
+  min-height: 35px;
   font: inherit;
   font-weight: 400;
   line-height: 1.5;
-  border: 1px solid var(--border-primary);
-  background: var(--bg-primary);
+  border: 1px solid var(--control-border);
+  background: var(--control-bg);
   color: var(--text-primary);
   box-shadow: none;
   border-radius: var(--button-radius, var(--radius-md));
@@ -335,7 +339,7 @@ button {
   cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
-button:hover:not(:disabled) { border-color: var(--border-hover); background: var(--bg-hover); }
+button:hover:not(:disabled), ui-select:hover:not([disabled]) { border-color: var(--border-hover); background: var(--bg-hover); }
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 :root:not([data-cpamp-plugin-host="true"]) button:focus-visible {
   outline: none;
@@ -358,72 +362,59 @@ button.danger:hover:not(:disabled) { border-color: var(--error-color); }
 button.link { min-height: 0; border: none; background: none; padding: 2px 4px; color: var(--primary-active); }
 button.link:hover:not(:disabled) { background: none; color: var(--text-primary); text-decoration: underline; }
 button.link.danger:hover:not(:disabled) { color: var(--error-color); }
-input, select, textarea {
+input, ui-select, textarea {
   font: inherit;
   font-weight: 400;
   color: var(--text-primary);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
   padding: 6px 9px;
   transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
-input:not([type="checkbox"]):not([type="radio"]), select { min-height: 35px; }
-input:focus, select:focus, textarea:focus {
+input:not([type="checkbox"]):not([type="radio"]), ui-select { min-height: 35px; }
+input:focus, ui-select:is(:focus-visible, :state(open)), .time-range-trigger[aria-expanded="true"], textarea:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
   outline: none;
 }
+/* Scrolling lists clip at their padding edge, so they pad by the 3px focus ring and give the space back in margins. */
+.price-reference-results, .time-range-hour-list, .column-settings { margin: -3px; padding: 3px; }
 input[type="radio"] { accent-color: var(--primary-color); }
 input[type="number"] { width: 110px; }
-.native-select {
-  position: relative;
+.lucide-icon { display: block; flex: none; width: 1em; height: 1em; }
+.lucide-chevron-icon { display: block; width: 14px; height: 14px; stroke-width: 2.5; transition: transform 0.15s ease; }
+ui-select {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-width: 0;
   max-width: 100%;
-  color: var(--text-secondary);
-}
-.native-select::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  width: 20px;
-  height: 20px;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-.native-select > select {
-  -webkit-appearance: none;
-  appearance: none;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-  padding-right: 36px;
-  color: var(--text-primary);
-  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
   white-space: nowrap;
 }
-.native-select-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 15px;
-  height: 15px;
-  transform: translateY(-50%);
-  color: var(--text-tertiary);
-  pointer-events: none;
+ui-select > option { display: none; }
+ui-select[disabled] { opacity: 0.6; cursor: not-allowed; }
+ui-select::part(icon), .time-range-icon { flex: none; width: 15px; height: 15px; color: var(--text-tertiary); }
+ui-select::part(value) { display: grid; flex: 1; min-width: 0; }
+/* Every option label shares one cell, so the control keeps the width of its longest option. */
+ui-select::part(label) { grid-area: 1 / 1; overflow: hidden; text-overflow: ellipsis; visibility: hidden; }
+ui-select::part(current) { visibility: visible; }
+ui-select:state(placeholder)::part(current) { color: var(--text-tertiary); }
+ui-select::part(chevron), .time-range-chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-right: -2px;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
 }
-.native-select-icon + select { padding-left: 34px; }
-label.field > .native-select, label.field > .native-select > select { width: 100%; }
+ui-select:state(open)::part(chevron) { transform: rotate(180deg); }
+label.field > ui-select { width: 100%; }
 label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 500; color: var(--text-secondary); }
-:root:not([data-cpamp-plugin-host="true"]) label.field input, :root:not([data-cpamp-plugin-host="true"]) label.field select {
+:root:not([data-cpamp-plugin-host="true"]) label.field input, :root:not([data-cpamp-plugin-host="true"]) label.field ui-select {
   font-size: 14px;
   line-height: 1.5;
 }
@@ -478,31 +469,19 @@ tbody tr:hover { background: var(--bg-hover); }
   .tabs > button.active:hover:not(:active) { translate: 0 -1px; }
   .tabs > button:active { scale: 0.96; transition-duration: 0.08s; }
 }
-.page-tab-select { display: none; width: 160px; }
-.page-tab-select > select { width: 100%; font-size: 13px; font-weight: 600; }
+.page-tab-select { display: none; width: 160px; font-size: 13px; font-weight: 600; }
 /* Keep the hidden tabs measurable so the dropdown follows their translated width. */
 .page-navigation.compact .tabs { position: absolute; visibility: hidden; pointer-events: none; }
 .page-navigation.compact .page-tab-select { display: inline-flex; }
 .page-tab-tools { display: flex; flex: none; align-items: center; gap: 4px; }
-.page-tab-tools > .icon-action {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  line-height: 0;
-}
-:root .page-navigation button:focus-visible { outline: 2px solid var(--primary-color); outline-offset: -2px; }
+/* The switcher clips its tab bar, so the tabs and the dropdown that replaces them show focus inside their own box. */
+:root .page-navigation button:focus-visible { outline: 2px solid var(--primary-color); outline-offset: -2px; box-shadow: none; }
+:root .page-tab-select:is(:focus-visible, :state(open)) { box-shadow: inset 0 0 0 1px var(--primary-color); }
 .page-tab-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .page-tab-actions > button, .page-tab-actions > .time-range-control, .display-currency-control, .auto-refresh-control { flex: none; }
 .page-tab-actions > .time-range-control { max-width: 35%; }
+.event-actions { display: flex; align-items: center; gap: 8px; }
 .page-key-filter { flex: 0 1 var(--filter-select-max-width); }
-.page-key-filter > select { width: 100%; }
 .tag {
   display: inline-flex;
   align-items: center;
@@ -609,21 +588,20 @@ tbody tr:hover { background: var(--bg-hover); }
   );
   mask-image: linear-gradient(#000, rgb(0 0 0 / 0.9) 24%, rgb(0 0 0 / 0.58) 48%, rgb(0 0 0 / 0.22) 72%, transparent);
 }
-:root[data-cpamp-plugin-host="true"] input, :root[data-cpamp-plugin-host="true"] select, :root[data-cpamp-plugin-host="true"] textarea {
+:root[data-cpamp-plugin-host="true"] input, :root[data-cpamp-plugin-host="true"] ui-select, :root[data-cpamp-plugin-host="true"] textarea {
   min-height: 34px;
-  border-color: var(--app-input-border, var(--border-primary));
-  background: var(--app-input-bg, var(--app-surface-strong, var(--bg-primary)));
   box-shadow: none;
 }
-:root[data-cpamp-plugin-host="true"] input:not([type="checkbox"]):not([type="radio"]), :root[data-cpamp-plugin-host="true"] select {
+:root[data-cpamp-plugin-host="true"] input:not([type="checkbox"]):not([type="radio"]), :root[data-cpamp-plugin-host="true"] ui-select {
   padding-block: 5px;
 }
-:root[data-cpamp-plugin-host="true"] label.field input, :root[data-cpamp-plugin-host="true"] label.field select {
+:root[data-cpamp-plugin-host="true"] label.field input, :root[data-cpamp-plugin-host="true"] label.field ui-select {
   font-size: 13px;
   line-height: 1.5;
 }
 :root[data-cpamp-plugin-host="true"] input:focus,
-:root[data-cpamp-plugin-host="true"] select:focus,
+:root[data-cpamp-plugin-host="true"] ui-select:is(:focus-visible, :state(open)),
+:root[data-cpamp-plugin-host="true"] .time-range-trigger[aria-expanded="true"],
 :root[data-cpamp-plugin-host="true"] textarea:focus {
   border-color: var(--app-input-border-focus, var(--primary-color));
   background: var(--app-input-bg-focus, var(--app-surface-strong, var(--bg-primary)));
@@ -645,20 +623,14 @@ tbody tr:hover { background: var(--bg-hover); }
   border-color: var(--border-subtle, var(--app-border));
   background: var(--surface-subtle, var(--app-surface-muted));
 }
-:root[data-cpamp-plugin-host="true"] .toggle-filter {
-  border-color: var(--app-input-border, var(--app-border));
-  background: var(--app-input-bg, var(--app-surface-strong));
-}
-:root[data-cpamp-plugin-host="true"] .toggle-filter.compact-toggle { border-color: transparent; background: transparent; }
 :root[data-cpamp-plugin-host="true"] button:not(.link, .icon-action, .routing-section-toggle, .routing-option) {
-  min-height: var(--button-min-height, 34px);
+  min-height: 34px;
   padding: 0 var(--button-padding-inline, 12px);
-  border-color: var(--app-border, var(--border-color));
   border-radius: var(--button-radius, var(--app-radius-md, 12px));
-  background: var(--app-surface-muted, var(--bg-tertiary));
   line-height: 1.2;
 }
-:root[data-cpamp-plugin-host="true"] button:not(.link):not(.routing-section-toggle):not(.routing-option):hover:not(:disabled) {
+:root[data-cpamp-plugin-host="true"] button:not(.link):not(.routing-section-toggle):not(.routing-option):hover:not(:disabled),
+:root[data-cpamp-plugin-host="true"] ui-select:hover:not([disabled]) {
   border-color: var(--border-hover);
   background: var(--app-accent-soft, var(--bg-hover));
   color: var(--primary-color);
@@ -700,7 +672,7 @@ tbody tr:hover { background: var(--bg-hover); }
   background: transparent;
   color: color-mix(in srgb, var(--text-secondary) 84%, var(--text-primary));
 }
-:root[data-cpamp-plugin-host="true"] .page-tab-tools > .icon-action, :root[data-cpamp-plugin-host="true"] .page-tab-select > select {
+:root[data-cpamp-plugin-host="true"] .page-tab-tools > .icon-action, :root[data-cpamp-plugin-host="true"] .page-tab-select {
   border-radius: 999px;
 }
 :root[data-cpamp-plugin-host="true"] .tabs > button.active {
@@ -721,10 +693,10 @@ tbody tr:hover { background: var(--bg-hover); }
 .quota-fill.medium { background: var(--quota-medium-color); }
 .quota-fill.low { background: var(--quota-low-color); }
 @media (prefers-reduced-motion: reduce) {
-  body, button, input, select, textarea, .quota-fill, .account-model-card, .lucide-chevron-icon { transition: none; }
+  body, button, input, ui-select, textarea, .quota-fill, .account-model-card, .lucide-chevron-icon { transition: none; }
 }
 .concurrency-editor { display: flex; align-items: center; gap: 7px; min-width: 172px; }
-.concurrency-editor .native-select, .concurrency-editor select { width: 96px; min-width: 96px; }
+.concurrency-editor ui-select { width: 96px; min-width: 96px; }
 .concurrency-editor .small { white-space: nowrap; }
 .key-plan-select { max-width: 240px; }
 .api-key-identity { display: inline-flex; align-items: baseline; flex: 0 1 auto; gap: 6px; min-width: 0; max-width: 100%; }
@@ -752,23 +724,6 @@ button.inline-icon-button.copied, button.inline-icon-button.copied:hover { color
 :root[data-cpamp-plugin-host="true"] button.inline-icon-button { min-height: 22px; padding: 0; }
 .inline-icon-button .lucide-icon { width: 12px; height: 12px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-.notice { padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: 14px; display: none; border: 1px solid transparent; }
-.notice.show { display: block; }
-.notice.err { background: var(--notice-error-bg); color: var(--failure-badge-text); border-color: var(--failure-badge-border); }
-.notice.ok { background: var(--notice-success-bg); color: var(--success-badge-text); border-color: var(--success-badge-border); }
-#notice {
-  position: fixed;
-  z-index: 2000;
-  top: max(14px, env(safe-area-inset-top));
-  right: auto;
-  bottom: auto;
-  left: 50%;
-  width: min(520px, calc(100vw - 24px));
-  margin: 0;
-  box-shadow: var(--floating-shadow);
-  transform: translateX(-50%);
-  pointer-events: none;
-}
 .hidden { display: none !important; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .gate { max-width: 520px; margin: 9vh auto; padding: 20px; }
@@ -852,22 +807,8 @@ button.inline-icon-button.copied, button.inline-icon-button.copied:hover { color
   backdrop-filter: var(--glass-backdrop-filter, none);
   -webkit-backdrop-filter: var(--glass-backdrop-filter, none);
 }
-.standalone-actions .icon-action {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  min-height: 38px;
-  padding: 0;
-  border-radius: 11px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  line-height: 0;
-}
-.standalone-actions .icon-action:hover:not(:disabled), .standalone-actions .icon-action[aria-expanded="true"] {
-  border-color: transparent;
+.standalone-actions .icon-action { --icon-action-size: 38px; border-radius: 11px; }
+.standalone-actions .icon-action[aria-expanded="true"] {
   background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   color: var(--text-primary);
 }
@@ -890,6 +831,22 @@ button.inline-icon-button.copied, button.inline-icon-button.copied:hover { color
   background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   color: var(--text-primary);
 }
+/* Icon-only controls carry no frame; buttons with a label keep the bordered button look. */
+button.icon-action {
+  display: grid;
+  place-items: center;
+  width: var(--icon-action-size, 34px);
+  height: var(--icon-action-size, 34px);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  line-height: 0;
+}
+button.icon-action:hover:not(:disabled) { background: color-mix(in srgb, var(--text-primary) 8%, transparent); color: var(--text-primary); }
 .icon-action .lucide-icon { width: 16px; height: 16px; }
 body.embedded .standalone-actions { display: none; }
 .account-subscription-stats { margin-bottom: 16px; }
@@ -924,49 +881,31 @@ body.embedded .standalone-actions { display: none; }
   border: 1px solid var(--border-primary);
   border-radius: 8px;
   gap: 10px;
-  align-items: start;
 }
 .plan-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) max-content; gap: 12px; }
-.plan-details input, .plan-details select, .plan-window input { width: 100%; min-width: 0; }
+.plan-details input, .plan-details ui-select, .plan-window input { width: 100%; min-width: 0; }
 .plan-window.unified { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr); }
-.plan-window-limits { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 10px; }
+.plan-window-limits { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+/* Fields in a row share label and control tracks, so neither a wrapped label nor an error moves a neighbouring input. */
+.plan-window .field { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 4px; }
 .period-input { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
 .plan-window .window-delete {
+  --icon-action-size: 20px;
   position: absolute;
   top: 2px;
   right: 2px;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
-  border: 0;
   border-radius: 50%;
-  background: transparent;
   color: var(--text-tertiary);
-  line-height: 1;
 }
 .plan-window .window-delete:hover:not(:disabled) { color: var(--error-color); background: var(--bg-hover); }
 .plan-window button.window-delete:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--primary-color); }
+.field-control { display: grid; align-content: start; gap: 4px; min-width: 0; }
 .field-error { color: var(--error-color); }
 .field-error:empty { display: none; }
 :root .plan-window input[aria-invalid="true"] { border-color: var(--error-color); box-shadow: inset 0 0 0 1px var(--error-color); }
 .date-time-control { position: relative; min-width: 0; }
 :root .date-time-control > input { padding-right: 36px; }
-:root .date-time-control > .icon-action {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  min-height: 0;
-  padding: 6px;
-  border: 0;
-  background: transparent;
-}
+:root .date-time-control > .icon-action { --icon-action-size: 28px; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); }
 .date-time-clock { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .date-time-clock input { width: 100%; min-width: 0; }
 @media (max-width: 640px) {
@@ -1064,7 +1003,7 @@ details[open] > .details-summary .lucide-chevron-icon, .routing-section-toggle[a
 .section-loading { min-height: 400px; }
 .credential-filter-bar { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .credential-filter-switches { display: contents; }
-.credential-filter-bar .native-select, .credential-filter-bar select { min-width: 150px; }
+.credential-filter-bar ui-select { min-width: 150px; }
 .credential-filter-bar input[type="search"] { flex: 0 1 var(--filter-search-width); min-width: 140px; }
 .toggle-filter {
   display: inline-flex;
@@ -1072,8 +1011,9 @@ details[open] > .details-summary .lucide-chevron-icon, .routing-section-toggle[a
   gap: 8px;
   min-height: 35px;
   padding: 0 10px;
-  border: 1px solid var(--border-primary);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-md);
+  background: var(--control-bg);
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;
@@ -1139,23 +1079,14 @@ details[open] > .details-summary .lucide-chevron-icon, .routing-section-toggle[a
 .toggle-filter.compact-toggle:focus-within { border-color: transparent; box-shadow: none; }
 /* Keep the blur below a third of the font size so dense scripts retain separate glyphs. */
 body.privacy-masked .mask-blur { filter: blur(0.28em); }
-/* Blur selected identities without blurring the native control's border or arrow. */
-body.privacy-masked .mask-select:not(:has(option[value=""]:checked))::before {
-  content: "";
-  position: absolute;
-  inset: 1px 30px 1px 1px;
-  border-radius: var(--radius-md);
-  backdrop-filter: blur(0.28em);
-  -webkit-backdrop-filter: blur(0.28em);
-  pointer-events: none;
-}
+/* The empty value is the unfiltered choice; any other selected identity is blurred. */
+body.privacy-masked ui-select.mask-select:not(:has(> option[value=""]:checked))::part(current) { filter: blur(0.28em); }
 .credential-list { container: credential-table / inline-size; }
 .credential-table { width: 100%; min-width: 0; table-layout: auto; }
 .credential-table th:not(.credential-quota-column) { width: 1%; }
-.credential-edit-column, .credential-edit-cell { width: 28px; min-width: 28px; }
-.credential-edit-cell { vertical-align: middle; }
-.credential-edit-cell > button { width: 26px; height: 26px; min-height: 26px; padding: 4px; }
-.credential-edit-cell .lucide-icon { width: 15px; height: 15px; }
+:is(.credential-edit-cell, .credential-actions) { --icon-action-size: 26px; }
+:is(.credential-edit-cell, .credential-actions) .icon-action { border-radius: 50%; }
+:is(.credential-edit-cell, .credential-actions) .lucide-icon { width: 15px; height: 15px; }
 .credential-meta > .credential-name-tag { max-width: min(180px, 100%); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .credential-row.disabled > :not(.credential-actions-cell, .credential-edit-cell, .selection-cell) { opacity: 0.68; }
 .credential-metric { display: grid; gap: 3px; min-width: 0; }
@@ -1221,24 +1152,8 @@ body.privacy-masked .mask-select:not(:has(option[value=""]:checked))::before {
 :root[data-theme="dark"] .provider-icon[data-provider="kimi"], :root[data-theme="dark"] .provider-icon[data-provider="xai"] {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
 }
-.credential-actions {
-  --button-min-height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  width: max-content;
-  margin-left: auto;
-}
+.credential-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: max-content; margin-left: auto; }
 .auth-quota-actions { display: flex; flex-direction: column; gap: 6px; }
-.round-icon-button {
-  --button-padding-inline: 0;
-  --button-radius: 50%;
-  width: var(--button-min-height);
-  height: var(--button-min-height);
-  padding: 0;
-  flex: none;
-}
 .credential-actions .loading .lucide-icon,
 [data-page-action="refresh"]:disabled .lucide-icon,
 .credential-filter-bar [data-loading="true"] .lucide-icon {
@@ -1369,82 +1284,47 @@ body.privacy-masked .mask-select:not(:has(option[value=""]:checked))::before {
   white-space: nowrap;
 }
 .auth-plan-expiry .inline-icon-button { display: none; }
-@container credential-table (min-width: 901px) {
+@container credential-table (width > 900px) {
   .auth-plan-expiry-separator, .auth-plan-expiry.end-time .auth-plan-time-left, .auth-plan-expiry:not(.end-time) .auth-plan-end-time {
     display: none;
   }
   .auth-plan-expiry .inline-icon-button { display: grid; }
 }
+/* Card cells flow in DOM order, so rows without an edit button, plan or actions need no layout of their own. */
 @container credential-table (max-width: 900px) {
   .credential-table, .credential-table tbody { display: block; }
   .credential-table thead { display: none; }
-  .credential-table .credential-row {
-    display: grid;
-    grid-auto-columns: minmax(0, 1fr);
-    grid-template-areas: "identity identity identity actions" "inflight usage usage usage" "quota quota quota quota";
-    gap: 16px;
-    padding: 16px;
-    border-bottom: 1px solid var(--border-color);
-  }
-  .credential-table .credential-row:has(> .credential-plan-cell) {
-    grid-template-areas: "identity identity plan actions" "inflight usage usage usage" "quota quota quota quota";
-  }
-
-  .credential-table .credential-row:has(> .credential-edit-cell) {
-    grid-template-areas: "identity identity edit actions" "inflight usage usage usage" "quota quota quota quota";
-  }
-  .credential-table .credential-row:has(> .credential-edit-cell):has(> .credential-plan-cell) {
-    grid-template-areas: "identity identity edit actions" "plan plan plan plan" "inflight usage usage usage" "quota quota quota quota";
-  }
-  .credential-edit-cell { grid-area: edit; align-self: start; }
+  .credential-table .credential-row { display: grid; border-bottom: 1px solid var(--border-color); }
   .credential-table .credential-row:last-child { border-bottom: none; }
   .credential-table td { display: block; min-width: 0; padding: 0; border: none; }
-  .credential-identity-cell { grid-area: identity; }
-  .credential-row:not(:has(> .credential-actions-cell)) > .credential-identity-cell { grid-column: 1 / -1; }
-  .credential-plan-cell { grid-area: plan; }
-  .credential-inflight-cell { grid-area: inflight; }
-  .credential-usage-cell { grid-area: usage; }
-  .credential-usage { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; min-width: 0; }
-  .credential-quota-cell { grid-area: quota; }
-  .credential-actions-cell { grid-area: actions; }
-  /* Cards drop actions that never apply to the row; the table keeps the column. */
-  .credential-actions-cell.unavailable { display: none; }
+  .credential-table .credential-edit-cell { justify-self: end; align-self: start; }
+  .credential-table :is(.credential-plan-cell, .credential-quota-cell) { grid-column: 1 / -1; }
+  .credential-usage { min-width: 0; }
   .auth-quota-actions { flex-direction: row; }
   .credential-metric-label { display: block; }
   .auth-quota-list { gap: 10px 16px; }
 }
-@container credential-table (max-width: 560px) {
-  .credential-table .credential-row {
-    grid-template-columns: minmax(0, 1fr) max-content;
-    grid-template-areas: "identity identity" "inflight inflight" "usage usage" "quota quota" "actions actions";
-    gap: 10px 14px;
-    padding: 14px;
-  }
-  .credential-table .credential-row:has(> .credential-plan-cell) {
-    grid-template-areas: "identity identity" "plan expiry" "inflight inflight" "usage usage" "quota quota" "actions actions";
-  }
-  .credential-table .credential-row:not(:has(> .credential-actions-cell)),
-  .credential-table .credential-row:has(> .credential-actions-cell.unavailable) {
-    grid-template-areas: "identity identity" "inflight inflight" "usage usage" "quota quota";
-  }
-
-  .credential-table .credential-row:has(> .credential-edit-cell) {
-    grid-template-areas: "identity edit" "inflight inflight" "usage usage" "quota quota" "actions actions";
-  }
-  .credential-table .credential-row:has(> .credential-edit-cell):has(> .credential-plan-cell) {
-    grid-template-areas: "identity edit" "plan expiry" "inflight inflight" "usage usage" "quota quota" "actions actions";
-  }
-  .auth-quota-list { grid-template-columns: minmax(0, 1fr); }
-  .credential-actions { --button-min-height: 30px; }
-  .credential-usage-item { gap: 4px; font-size: 12px; }
-  .credential-usage-item > .lucide-icon { width: 12px; height: 12px; }
-  .credential-table .credential-plan-cell { display: contents; }
-  .credential-plan-cell .credential-metric { grid-area: plan; }
-  .auth-plan-expiry { grid-area: expiry; align-self: start; margin: 0; font-size: 13px; color: var(--text-primary); }
-  .credential-table .credential-metric { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+/* The edit button and the actions close the first row. */
+@container credential-table (560px < width <= 900px) {
+  .credential-table .credential-row { grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto; gap: 16px; padding: 16px; }
+  .credential-table .credential-identity-cell { grid-column: 1 / 4; }
+  .credential-table .credential-inflight-cell { grid-column: 1; }
+  .credential-table .credential-usage-cell { grid-column: 2 / -1; }
+  .credential-table .credential-actions-cell { grid-area: 1 / -2; }
+  .credential-usage { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 }
-@container credential-table (max-width: 320px) {
-  .credential-usage-item { flex-direction: column; align-items: flex-start; }
+/* Only the edit button stays beside the identity; the actions close the card. */
+@container credential-table (max-width: 560px) {
+  .credential-table .credential-row { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; padding: 14px; }
+  .credential-table :is(.credential-inflight-cell, .credential-usage-cell, .credential-actions-cell) { grid-column: 1 / -1; }
+  /* The icon, not its hit area, lines up with the card's right edge. */
+  .credential-table .credential-edit-cell { margin-right: -5px; }
+  .auth-quota-list { grid-template-columns: minmax(0, 1fr); }
+  .credential-actions { --icon-action-size: 30px; }
+  .credential-table :is(.credential-plan-cell, .credential-metric) { display: flex; flex-wrap: wrap; align-items: baseline; }
+  .credential-table .credential-plan-cell { gap: 2px 12px; }
+  .credential-table .credential-metric { gap: 2px 6px; }
+  .auth-plan-expiry { margin: 0 0 0 auto; color: var(--text-primary); font-size: 13px; }
 }
 dialog, .time-range-popover { max-height: 80dvh; }
 dialog {
@@ -1486,7 +1366,7 @@ html:has(dialog[open]), body:has(dialog[open]) { overflow: hidden; }
   .credential-editor-fields { grid-template-columns: 1fr; }
 }
 .price-dialog-model { margin: 0 0 16px; font-size: 14px; overflow-wrap: anywhere; }
-.price-reference { margin-bottom: 18px; }
+.price-reference { display: grid; gap: 8px; margin-bottom: 18px; }
 .price-reference input { width: 100%; }
 .price-reference-results {
   display: flex;
@@ -1495,7 +1375,6 @@ html:has(dialog[open]), body:has(dialog[open]) { overflow: hidden; }
   max-height: 180px;
   overflow: auto;
   overscroll-behavior: contain;
-  margin-top: 8px;
 }
 .price-reference-option {
   display: grid;
@@ -1552,14 +1431,7 @@ dialog.drawer[open] { display: flex; flex-direction: column; }
 @keyframes drawer-in {
   from { translate: 100% 0; }
 }
-.drawer-header {
-  --button-min-height: 32px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 18px 20px 16px;
-  border-bottom: 1px solid var(--border-color);
-}
+.drawer-header { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px 16px; border-bottom: 1px solid var(--border-color); }
 .drawer-identity { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; }
 .drawer-title { min-width: 0; }
 .drawer-title h2 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1591,7 +1463,6 @@ dialog.drawer[open] { display: flex; flex-direction: column; }
 .quota-period-list > .auth-quota-row:first-child { padding-top: 0; border-top: 0; }
 .quota-period-usage { display: inline-flex; align-items: center; gap: 6px; }
 .quota-period-plans { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-.retry-button { margin-top: 10px; }
 .display-contents { display: contents; }
 .switch-field { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 13px; margin-top: 16px; }
 .switch-field input { width: auto; }
@@ -1643,8 +1514,6 @@ dialog.drawer[open] { display: flex; flex-direction: column; }
 .selection-list label > .tag { flex: none; }
 .settings-entry-value { flex: 1; min-width: 0; color: var(--text-primary); font-size: 12px; overflow-wrap: anywhere; }
 .settings-chip-list { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-width: 0; }
-.lucide-icon { display: block; flex: none; width: 1em; height: 1em; }
-.lucide-chevron-icon { display: block; width: 14px; height: 14px; stroke-width: 2.5; transition: transform 0.15s ease; }
 .settings-chip {
   display: inline-flex;
   flex: none;
@@ -1838,7 +1707,7 @@ dialog.drawer[open] { display: flex; flex-direction: column; }
 }
 /* Filters share one search width and one select cap so no single control dominates a wrapped toolbar. */
 .wide-search, #price-filter, .credential-filter-bar input[type="search"] { width: var(--filter-search-width); max-width: 100%; }
-.section-actions .native-select, .section-actions select, .page-key-filter { max-width: var(--filter-select-max-width); }
+.section-actions ui-select, .page-key-filter { max-width: var(--filter-select-max-width); }
 .section-toolbar, .settings-section-header { margin-bottom: 12px; }
 .section-toolbar h2, .settings-section-header h2, .account-plan h2 { margin: 0; }
 .section-actions { min-width: 0; }
@@ -1861,6 +1730,7 @@ body:not(.embedded) #keys-import-labels { display: none; }
 }
 .time-range-control { position: relative; min-width: 0; }
 .time-range-trigger {
+  --button-padding-inline: 9px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -1869,21 +1739,11 @@ body:not(.embedded) #keys-import-labels { display: none; }
   min-width: 0;
   white-space: nowrap;
 }
-.time-range-icon { width: 15px; height: 15px; flex: none; color: var(--text-tertiary); }
 .time-range-icon + span { flex: 1; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; }
-.time-range-chevron {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  margin-left: 3px;
-  color: var(--text-secondary);
-  stroke-width: 2;
-  transition: transform 0.15s ease;
-}
 .time-range-trigger[aria-expanded="true"] .time-range-chevron { transform: rotate(180deg); }
 .time-range-popover { position: absolute; top: calc(100% + 6px); right: 0; }
-.date-time-popover, .selection-menu { position: fixed; margin: 0; inset: auto; color: var(--text-primary); }
-.time-range-popover, .date-time-popover, .selection-menu {
+.date-time-popover, .choice-menu { position: fixed; margin: 0; inset: auto; color: var(--text-primary); }
+.time-range-popover, .date-time-popover, .choice-menu {
   z-index: 1200;
   width: min(360px, calc(100vw - 24px));
   overflow: auto;
@@ -1895,9 +1755,14 @@ body:not(.embedded) #keys-import-labels { display: none; }
   transform-origin: top right;
   animation: time-range-in 150ms ease-out both;
 }
-.selection-menu { gap: 2px; width: max-content; min-width: 112px; max-width: calc(100vw - 24px); padding: 6px; }
-.selection-menu:popover-open { display: grid; }
-:root .selection-menu button.selection-option {
+.choice-menu { gap: 4px; width: max-content; min-width: 112px; max-width: min(460px, calc(100vw - 24px)); padding: 6px; }
+.choice-menu:popover-open { display: flex; flex-direction: column; }
+.choice-search { flex: none; width: 100%; }
+.choice-options { display: grid; gap: 2px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+:root .choice-menu button.choice-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   padding: 8px 12px;
   border-color: transparent;
@@ -1906,17 +1771,24 @@ body:not(.embedded) #keys-import-labels { display: none; }
   color: var(--text-secondary);
   text-align: left;
 }
-:root .selection-menu button.selection-option:hover:not(:disabled) {
+/* Like a native menu, the keyboard's current option is highlighted rather than ringed, which the list would clip. */
+:root .choice-menu button.choice-option:is(:hover:not(:disabled), :focus-visible) {
   border-color: transparent;
+  outline: none;
+  box-shadow: none;
   background: color-mix(in srgb, var(--text-primary) 7%, transparent);
   color: var(--text-primary);
 }
-:root .selection-menu button.selection-option[aria-checked="true"] {
+:root .choice-menu button.choice-option[aria-selected="true"] {
   border-color: transparent;
   background: color-mix(in srgb, var(--primary-color) 14%, transparent);
   color: var(--primary-active);
   font-weight: 600;
 }
+.choice-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.choice-check { flex: none; width: 15px; height: 15px; visibility: hidden; }
+.choice-option[aria-selected="true"] > .choice-check { visibility: visible; }
+.choice-empty { padding: 14px 12px; color: var(--text-tertiary); font-size: 13px; text-align: center; }
 @media (max-width: 640px) {
   .date-time-popover { inset: auto 12px 12px; margin-inline: auto; max-height: calc(100dvh - 24px); }
 }
@@ -1930,6 +1802,7 @@ body:not(.embedded) #keys-import-labels { display: none; }
 :root .time-range-popover .time-range-modes button { padding-inline: 4px; white-space: nowrap; }
 .time-range-custom { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 .time-range-units, .time-range-endpoints, .time-range-hours { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.time-range-hours > div { display: grid; gap: 8px; }
 :root .time-range-popover .time-range-endpoints button {
   padding-block: 8px;
   display: grid;
@@ -1948,15 +1821,7 @@ body:not(.embedded) #keys-import-labels { display: none; }
 :root .calendar-picker .calendar-grid button.range-end { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
 :root .calendar-picker .calendar-grid button.range-start.range-end { border-radius: var(--radius-md); }
 :root .calendar-picker .calendar-grid .outside-month { color: var(--text-tertiary); }
-.time-range-hour-list {
-  position: relative;
-  display: grid;
-  gap: 4px;
-  max-height: 220px;
-  overflow: auto;
-  margin-top: 8px;
-  overscroll-behavior: contain;
-}
+.time-range-hour-list { position: relative; display: grid; gap: 4px; max-height: 220px; overflow: auto; overscroll-behavior: contain; }
 .time-range-hour-list button { display: flex; align-items: center; justify-content: space-between; gap: 4px; text-align: left; }
 .picker-actions { justify-content: flex-end; margin-left: auto; }
 .date-time-popover > .picker-actions { margin-top: 14px; }
@@ -1989,16 +1854,7 @@ body:not(.embedded) #keys-import-labels { display: none; }
 .range-ticks { position: relative; height: 18px; margin-inline: 8px; }
 .range-ticks > span { position: absolute; transform: translateX(-50%); }
 .time-range-backdrop { display: none; }
-:root[data-cpamp-plugin-host="true"] .time-range-trigger {
-  border-color: var(--app-input-border, var(--border-color));
-  background: var(--app-input-bg, var(--bg-primary));
-}
-:root[data-cpamp-plugin-host="true"] .time-range-trigger[aria-expanded="true"] {
-  border-color: var(--app-input-border-focus, var(--primary-color));
-  background: var(--app-input-bg-focus, var(--bg-primary));
-  box-shadow: inset 0 0 0 1px var(--focus-inset);
-}
-:root[data-cpamp-plugin-host="true"] .time-range-popover, :root[data-cpamp-plugin-host="true"] .selection-menu {
+:root[data-cpamp-plugin-host="true"] .time-range-popover, :root[data-cpamp-plugin-host="true"] .choice-menu {
   border-color: color-mix(in srgb, var(--app-input-border-focus, var(--primary-color)) 28%, var(--app-border-strong, var(--border-color)));
   background: var(--app-surface-strong, var(--floating-surface));
   box-shadow: var(--floating-shadow, none);
@@ -2147,6 +2003,7 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
   color: var(--text-tertiary);
   font-size: 12px;
 }
+.event-load-state > .notice { flex: 1; margin: 0; }
 @media (max-width: 768px) {
   :root { --page-gap: 12px; }
   .wrap { padding: 14px 12px 0; }
@@ -2162,7 +2019,7 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
     width: 100%;
   }
   /* Cells size the controls here, so the shared search width and select cap step aside. */
-  .section-toolbar > .section-actions > *, .section-actions .native-select, .section-actions select { max-width: none; }
+  .section-toolbar > .section-actions > *, .section-actions ui-select { max-width: none; }
   .section-actions .wide-search, #price-filter { width: 100%; min-width: 0; }
   /* Flattening the button group lets the four controls share the two-column grid. */
   #tab-keys .section-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2173,23 +2030,23 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
   /* Search takes the whole line; the remaining controls split the next one and wrap labels too long for half of it. */
   #tab-prices .section-actions, #tab-plugin-logs .section-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #price-filter, #plugin-log-filter { grid-column: 1 / -1; }
-  #tab-prices .section-actions > *, #tab-plugin-logs .section-actions > *, #tab-plugin-logs .section-actions select {
+  #tab-prices .section-actions > *, #tab-plugin-logs .section-actions > *, #tab-plugin-logs .section-actions ui-select {
     align-self: stretch;
     width: 100%;
     min-width: 0;
     white-space: normal;
   }
-  /* The switches take the first line; category, search and the refresh icon share the second. */
+  /* The switches take the first line; category, search and the refresh icon share the second.
+     A lone switch leaves the rest of its line to the category filter, so search widens below. */
   .section-actions.credential-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
   .credential-filter-switches { display: flex; flex-wrap: wrap; grid-column: 1 / -1; gap: 8px; }
+  .credential-filter-switches:has(> :only-child) { grid-column: auto; }
+  .credential-filter-switches:has(> :only-child) ~ :is(ui-select, input[type="search"]) { grid-column: span 2; }
   .credential-filter-switches > .toggle-filter { flex: 1 1 auto; }
-  .credential-filter-bar input[type="search"], .credential-filter-bar .native-select, .credential-filter-bar select {
-    width: 100%;
-    min-width: 0;
-  }
+  .credential-filter-bar input[type="search"], .credential-filter-bar ui-select { width: 100%; min-width: 0; }
   .credential-filter-bar > .labeled-icon-button > span { display: none; }
   .section-actions.event-card-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .section-actions.event-card-actions .native-select, .section-actions.event-card-actions select { width: 100%; min-width: 0; }
+  .section-actions.event-card-actions ui-select { width: 100%; min-width: 0; }
   .event-card-actions > .link { justify-self: start; }
   .page-tab-actions .time-range-popover {
     position: fixed;
@@ -2221,14 +2078,13 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
     padding: 4px;
     border-radius: 14px;
   }
-  .standalone-actions .icon-action { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
+  .standalone-actions .icon-action { --icon-action-size: 36px; }
 }
 @media (max-width: 520px) {
   body:not(.embedded) #account-identity { display: none; }
   body:not(.embedded) .app-header, body:not(.embedded) .app-header .app-title { gap: 7px; }
-  body:not(.embedded) .standalone-actions .icon-action { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  body:not(.embedded) .standalone-actions .icon-action { --icon-action-size: 34px; }
 }
-.event-actions { display: flex; align-items: center; gap: 8px; }
 .labeled-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
 .labeled-icon-button .lucide-icon { width: 15px; height: 15px; color: var(--text-tertiary); }
 .privacy-mask-button[aria-pressed="true"], .privacy-mask-button[aria-pressed="true"] .lucide-icon { color: var(--primary-active); }
@@ -2294,8 +2150,7 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
 /* Titles take the height of a control row, so they line up across cards with or without controls. */
 .analysis-card-header h2 { display: flex; align-items: center; min-height: 35px; margin: 0; }
 .analysis-card-controls { gap: 12px; flex-wrap: nowrap; min-width: 0; max-width: 100%; }
-.analysis-card-controls > .native-select { flex: 0 1 auto; }
-.analysis-card-controls select { width: 100%; }
+.analysis-card-controls > ui-select { flex: 0 1 auto; }
 .analysis-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 .analysis-legend-item {
   display: inline-flex;
@@ -2352,7 +2207,7 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
 }
 .usage-distribution-metrics > [data-tip] { cursor: help; }
 .usage-distribution-metrics > [tabindex]:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
-.event-card-actions select { min-width: 132px; }
+.event-card-actions ui-select { min-width: 132px; }
 @media (max-width: 1100px) {
   .analysis-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -2363,12 +2218,13 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
   .usage-distribution-chart { width: min(240px, 75vw); height: min(240px, 75vw); }
 }
 @media (max-width: 640px) {
-  .page-tab-actions > .native-select > select, .credential-filter-bar > .native-select > select { padding-left: 8px; padding-right: 26px; }
-  .page-tab-actions > .native-select::after, .credential-filter-bar > .native-select::after { right: 6px; width: 16px; height: 16px; }
+  .page-tab-actions > ui-select, .credential-filter-bar > ui-select { gap: 6px; padding-inline: 8px; }
+  .page-tab-actions > ui-select::part(chevron), .credential-filter-bar > ui-select::part(chevron), .time-range-chevron {
+    width: 16px;
+    height: 16px;
+  }
   .credential-filter-switches > .toggle-filter { padding-inline: 8px; }
-  .page-tab-actions > .native-select > .native-select-icon + select { padding-left: 30px; }
   .time-range-trigger { --button-padding-inline: 8px; gap: 6px; }
-  .time-range-chevron { width: 16px; height: 16px; margin-left: 0; }
   .page-tab-actions .labeled-icon-button { --button-padding-inline: 9px; }
   /* Wrapping chips need the full width; a short value still fits beside its label. */
   .settings-entry-field:has(.settings-chip-list) { display: grid; gap: 4px; }
@@ -2380,18 +2236,17 @@ button.column-setting-handle { align-self: stretch; width: 32px; cursor: grab; t
 }
 @media (max-width: 520px) {
   .page-tab-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .page-tab-actions > :is(.native-select, .time-range-control, button) { width: 100%; max-width: none; }
-  .page-tab-actions > .native-select > select { width: 100%; }
-  .page-tab-actions > .event-actions { grid-column: 1 / -1; }
+  .page-tab-actions > :is(ui-select, .time-range-control, button) { width: 100%; max-width: none; }
   .event-actions > button { flex: 1; min-width: 0; }
-  /* The controls pair up; without a key filter, the time range takes a line of its own. */
+  /* The controls pair up; several event actions, or the time range without a key filter, take a line of their own. */
+  .page-tab-actions > .event-actions:has(> :not(.hidden) ~ :not(.hidden)) { grid-column: 1 / -1; }
   .page-tab-actions:not(.has-key-filter) > .time-range-control { grid-column: 1 / -1; }
   .time-range-trigger { width: 100%; }
   .analysis-card-controls { gap: 6px; width: 100%; }
   .usage-distribution-tabs { gap: 4px; --button-padding-inline: 4px; }
   .usage-distribution-tabs button { font-size: 12px; }
-  .analysis-card-controls select { padding-left: 8px; padding-right: 26px; font-size: 12px; }
-  .analysis-card-controls > .native-select::after { right: 6px; width: 16px; height: 16px; }
+  .analysis-card-controls ui-select { gap: 6px; padding-inline: 8px; font-size: 12px; }
+  .analysis-card-controls ui-select::part(chevron) { width: 16px; height: 16px; }
   .analysis-summary-grid { grid-template-columns: 1fr; }
   .analysis-summary-details { gap: 5px; }
   .analysis-summary-line { gap: 2px; font-size: 10px; }

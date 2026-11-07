@@ -585,7 +585,7 @@ function renderAnalysisDistribution(account, { colors = analysisColors(), animat
     else if (dimension === "sources") row.label = displayLabel(row.label || row.key);
   }
   const metricSelect = el(
-    "select",
+    "ui-select",
     {
       "aria-label": m("ui.usage_distribution_metric"),
       onchange: (event) => {
@@ -633,12 +633,7 @@ function renderAnalysisDistribution(account, { colors = analysisColors(), animat
   });
   target.querySelector(".analysis-card-header").replaceChildren(
     el("h2", {}, m("ui.usage_distribution")),
-    el(
-      "div",
-      { class: "row analysis-card-controls" },
-      el("div", { class: "usage-distribution-tabs" }, tabs),
-      el("span", { class: "native-select" }, metricSelect)
-    )
+    el("div", { class: "row analysis-card-controls" }, el("div", { class: "usage-distribution-tabs" }, tabs), metricSelect)
   );
   target.querySelector(".usage-distribution-list").replaceChildren(...list);
   target.querySelector(".usage-distribution-layout").classList.toggle("hidden", !rows.length);
@@ -661,8 +656,9 @@ function renderSpeedTrend(account, view) {
   const card = $(prefix + "speed-trend");
   const rows = speedModelRows(analysis);
   const select = el(
-    "select",
+    "ui-select",
     {
+      searchable: true,
       "aria-label": m("ui.speed_trend_model"),
       onchange: (event) => {
         speedModels[role] = event.target.value;
@@ -671,7 +667,7 @@ function renderSpeedTrend(account, view) {
     },
     rows.map((row) => el("option", { value: row.key, text: row.key + DISPLAY_SEPARATOR + int(row.requests), selected: row.key === model }))
   );
-  card.querySelector(".analysis-card-controls").replaceChildren(...(rows.length ? [el("span", { class: "native-select" }, select)] : []));
+  card.querySelector(".analysis-card-controls").replaceChildren(...(rows.length ? [select] : []));
   const speed = state.speed;
   const stats = speed?.summary;
   const colors = analysisColors();

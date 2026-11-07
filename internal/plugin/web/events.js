@@ -61,7 +61,6 @@ function renderSelectOptions(select, options) {
   }
   for (const option of previous.values()) option.remove();
   select.value = selected;
-  if (select.selectedIndex < 0) select.value = "";
 }
 
 function populateEventFilterSelect(select, defaultLabel, values, valueOf = (item) => item, labelOf = valueOf) {
@@ -138,7 +137,7 @@ function renderEventKeys() {
 }
 
 function updateFilterClearButton(button) {
-  const selects = button.parentElement.querySelectorAll("select");
+  const selects = button.parentElement.querySelectorAll("ui-select");
   button.disabled = !Array.from(selects).some((select) => select.value);
 }
 
@@ -223,7 +222,7 @@ async function exportEvents(kind, account) {
     const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
     const name = "cpa-super-billing-" + (account ? "account-" : "") + view.tab + "-";
     downloadCSV(name + stamp + ".csv", eventCSV(entries, kind, account));
-    notify(m("ui.exported_value_value_records", { v0: int(entries.length), v1: view.label }));
+    notify(m("ui.exported_records", { count: int(entries.length) }));
   } finally {
     button.disabled = false;
     setLabeledActionIcon(button, "download", m("ui.export"));
@@ -283,7 +282,7 @@ $("events-clear-confirm").onclick = () => {
     async () => {
       const result = await plugin("DELETE", "/events", { older_than_days: days }, { command: true });
       resetEventHistory();
-      notify(m("ui.cleared_request_events", { v0: int(result.cleared) }));
+      notify(m("ui.cleared_request_events", { count: int(result.cleared) }));
       await loadPage(false);
     },
     m("ui.cleaning")
