@@ -175,6 +175,7 @@ func (a *App) handleManagement(raw []byte) ([]byte, error) {
 	if path == "" {
 		path = req.Path
 	}
+	a.store.CheckDatabaseFiles()
 
 	if req.Method == http.MethodGet && path == resourceBase+resourceUIPath {
 		return OKEnvelope(ManagementResponse{
@@ -199,7 +200,7 @@ func (a *App) handleManagement(raw []byte) ([]byte, error) {
 	if path != managementBase && !strings.HasPrefix(path, managementBase+"/") {
 		return OKEnvelope(JSONError(http.StatusNotFound, "not_found", "Management route not found: "+req.Method+" "+req.Path))
 	}
-	return OKEnvelope(a.routeManagement(req, strings.TrimPrefix(path, managementBase)))
+	return OKEnvelope(a.withDatabaseAlert(a.routeManagement(req, strings.TrimPrefix(path, managementBase))))
 }
 
 func (a *App) routeManagement(req ManagementRequest, suffix string) ManagementResponse {

@@ -254,6 +254,14 @@ function renderCC() {
     );
   if (data.credential_warning)
     notices.push(el("div", { class: "notice err show", text: m("cc.credential_warning", { v0: data.credential_warning }) }));
+  if (data.database_alert)
+    notices.push(
+      el("div", {
+        class: "notice err show cc-database-alert",
+        role: "alert",
+        text: window.billingI18n.serverMessage(data.database_alert.message, data.database_alert.text)
+      })
+    );
   if (data.legacy_database) {
     const legacy = data.legacy_database;
     notices.push(

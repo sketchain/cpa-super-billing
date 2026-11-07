@@ -24,6 +24,9 @@ type DB struct {
 	db      *sql.DB
 	path    string
 	notices []billing.RepositoryNotice
+	// walFiles identifies the -wal and -shm files this database opened with;
+	// nil when they could not be identified and the check is off.
+	walFiles *walFileRecord
 }
 
 // StoredQuotaHeaders reads the quota report out of the headers a request stored
@@ -47,6 +50,7 @@ func Open(path string, storedHeaders StoredQuotaHeaders, opts ...Option) (*DB, e
 		_ = database.Close()
 		return nil, explainDamage(database.path, err)
 	}
+	database.recordWALFiles()
 	return database, nil
 }
 
@@ -204,12 +208,32 @@ func syncTableIndexes(tx *sql.Tx, table string, definitions []index) error {
 	return nil
 }
 
+// secureFiles creates the database file private when it does not exist yet
+// and makes the database, -wal and -shm files that exist private.
+//
+// It must never open a database file that already exists, and nothing else may
+// open or close the live .db, -wal or -shm files outside SQLite either: closing
+// any descriptor of a file releases every POSIX (fcntl) lock the process holds
+// on it, including the locks of SQLite connections that are already open, and
+// SQLite does not take them again while one of its connections still believes
+// it holds them. This function used to open and close the database on every
+// connect, so the reference price connection, opened after the main one,
+// silently dropped the process's SHARED lock on the database for the rest of
+// its life. Any other process that then closed the database with SQLite before
+// 3.51 (such as a host's sqlite3 3.46 running a single read-only query) took an
+// EXCLUSIVE lock, decided it was the last connection, checkpointed and deleted
+// the live -wal and -shm files, and every later write went into the deleted
+// write-ahead log: lost if the process was killed, and corrupting the database
+// (for example "invalid rootpage") if yet another process wrote to it.
 func secureFiles(path string) error {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
-	if err != nil {
-		return fmt.Errorf("Create billing database %s: %w", path, err)
-	}
-	if err := file.Close(); err != nil {
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)
+	switch {
+	case err == nil:
+		// The file did not exist, so no connection can hold a lock on it.
+		if err := file.Close(); err != nil {
+			return fmt.Errorf("Create billing database %s: %w", path, err)
+		}
+	case !os.IsExist(err):
 		return fmt.Errorf("Create billing database %s: %w", path, err)
 	}
 	for _, name := range []string{path, path + "-wal", path + "-shm"} {

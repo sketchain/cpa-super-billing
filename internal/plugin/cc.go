@@ -473,6 +473,9 @@ func (a *App) ccView(_ ManagementRequest) ManagementResponse {
 	if legacy, ok := a.store.LegacyDatabaseNotice(); ok {
 		body["legacy_database"] = legacy
 	}
+	if alert, ok := a.store.DatabaseFileAlert(); ok {
+		body["database_alert"] = newDatabaseAlertView(alert)
+	}
 	return JSONResponse(http.StatusOK, body)
 }
 
