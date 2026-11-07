@@ -467,7 +467,10 @@ function updateThemeButtons() {
 function updateThemedVisuals() {
   updateThemeButtons();
   if (currentRole && activeTab(currentRole === "account") === "analysis") renderAnalysis(currentRole === "account");
-  if (currentRole === "admin" && activeTab(false) === "split") renderCCTrend();
+  if (currentRole === "admin" && activeTab(false) === "split") {
+    renderCCTrend();
+    renderCCUsage();
+  }
 }
 
 document.querySelectorAll('[data-page-action="logout"]').forEach((button) => {
