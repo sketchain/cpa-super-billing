@@ -110,7 +110,7 @@ function withFixedKeyResetWarning(note, keys) {
     "div",
     { class: "reset-confirmation" },
     el("div", { text: note }),
-    el("div", { class: "notice err show cc-reset-warning", text: m("ui.cc_fixed_key_reset_warning", { v0: fixed }) })
+    ccNotice("warning", m("ui.cc_fixed_key_reset_warning", { v0: fixed }), { className: "cc-reset-warning" })
   );
 }
 

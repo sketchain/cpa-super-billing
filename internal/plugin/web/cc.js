@@ -180,21 +180,28 @@ function ccNumberInput(value, onChange, attrs = {}) {
 
 function ccSelect(value, options, onChange, attrs = {}) {
   return el(
-    "span",
-    { class: "native-select" },
-    el(
-      "select",
-      {
-        ...attrs,
-        onchange: (event) => {
-          onChange(event.target.value);
-          ccMarkDirty();
-          renderCC();
-        }
-      },
-      options.map(([optionValue, label]) => el("option", { value: optionValue, text: label, selected: optionValue === value }))
-    )
+    "ui-select",
+    {
+      ...attrs,
+      onchange: (event) => {
+        onChange(event.target.value);
+        ccMarkDirty();
+        renderCC();
+      }
+    },
+    options.map(([optionValue, label]) => el("option", { value: optionValue, text: label, selected: optionValue === value }))
   );
+}
+
+// Inline notices describe the state of the split pages and stay until it changes. They use upstream's
+// notice() look; content may mix text and elements, and options add an id, classes, a role or an action.
+function ccNotice(kind, content, { action = null, className = "", id = null, role = null } = {}) {
+  const box = notice("", kind, action);
+  box.querySelector(".notice-text > span").replaceChildren(...[content].flat().filter((part) => part !== null && part !== ""));
+  if (className) box.classList.add(...className.split(/\s+/).filter(Boolean));
+  if (id) box.id = id;
+  if (role) box.setAttribute("role", role);
+  return box;
 }
 
 function ccTable(headers, rows, empty) {
@@ -229,55 +236,53 @@ function renderCC() {
   const notices = [];
   if (data.cc.loaded === false)
     notices.push(
-      el(
-        "div",
-        { class: "notice err show cc-not-loaded", role: "alert" },
-        el("strong", { text: m("cc.not_loaded") }),
-        " ",
-        m(draft.params.refuse_remainder_when_unloaded ? "cc.not_loaded_refusing" : "cc.not_loaded_admitting")
+      ccNotice(
+        "error",
+        [
+          el("strong", { text: m("cc.not_loaded") }),
+          " ",
+          m(draft.params.refuse_remainder_when_unloaded ? "cc.not_loaded_refusing" : "cc.not_loaded_admitting")
+        ],
+        { className: "cc-not-loaded", role: "alert" }
       )
     );
-  if (data.cc.error) notices.push(el("div", { class: "notice err show", text: m("cc.estimation_error", { v0: data.cc.error }) }));
+  if (data.cc.error) notices.push(ccNotice("error", m("cc.estimation_error", { v0: data.cc.error })));
   for (const warning of data.cc.warnings || []) {
     const text = window.billingI18n.serverMessage(warning, "");
-    if (text) notices.push(el("div", { class: "notice err show cc-shared-plan-warning", role: "alert", text }));
+    if (text) notices.push(ccNotice("warning", text, { className: "cc-shared-plan-warning", role: "alert" }));
   }
   const stale = ccStaleEntries(data, draft);
   if (stale.keys.length || stale.accounts.length)
     notices.push(
-      el(
-        "div",
-        { class: "notice show cc-stale" },
-        el("span", { text: m("cc.stale_entries", { v0: stale.keys.length, v1: stale.accounts.length }) }),
-        el("button", { type: "button", class: "link", text: m("cc.remove_stale"), onclick: () => ccRemoveStale(data, draft) })
-      )
+      ccNotice("info", m("cc.stale_entries", { v0: stale.keys.length, v1: stale.accounts.length }), {
+        className: "cc-stale",
+        action: el("button", { type: "button", class: "link", text: m("cc.remove_stale"), onclick: () => ccRemoveStale(data, draft) })
+      })
     );
-  if (data.credential_warning)
-    notices.push(el("div", { class: "notice err show", text: m("cc.credential_warning", { v0: data.credential_warning }) }));
+  if (data.credential_warning) notices.push(ccNotice("warning", m("cc.credential_warning", { v0: data.credential_warning })));
   if (data.database_alert)
     notices.push(
-      el("div", {
-        class: "notice err show cc-database-alert",
-        role: "alert",
-        text: window.billingI18n.serverMessage(data.database_alert.message, data.database_alert.text)
+      ccNotice("error", window.billingI18n.serverMessage(data.database_alert.message, data.database_alert.text), {
+        className: "cc-database-alert",
+        role: "alert"
       })
     );
   if (data.legacy_database) {
     const legacy = data.legacy_database;
     notices.push(
-      el("div", {
-        class: "notice show cc-legacy-database",
-        role: "status",
-        text: m(ccWhen(legacy.copied_at) !== "—" ? "cc.legacy_database_copied" : "cc.legacy_database_kept", {
+      ccNotice(
+        "info",
+        m(ccWhen(legacy.copied_at) !== "—" ? "cc.legacy_database_copied" : "cc.legacy_database_kept", {
           v0: legacy.path,
           v1: legacy.active
-        })
-      })
+        }),
+        { className: "cc-legacy-database", role: "status" }
+      )
     );
   }
   target.replaceChildren(
     ...notices,
-    el("p", { id: "cc-dirty", class: "notice err show hidden", text: m("cc.unsaved_changes") }),
+    ccNotice("warning", m("cc.unsaved_changes"), { id: "cc-dirty", className: "hidden", role: "status" }),
     ccProviderTabs(data, draft),
     ...ccProviderNotices(data, draft),
     ccAccountsSection(data, draft),
@@ -327,20 +332,16 @@ function ccProviderNotices(data, draft) {
   const accounts = data.cc.accounts.filter((account) => ccAccountProvider(data, draft, account.auth_index) === ccState.provider);
   const needsK = accounts.filter((account) => account.needs_k).map((account) => ccCredentialName(data, account.auth_index));
   if (needsK.length)
-    notices.push(
-      el("div", { class: "notice err show cc-needs-k", role: "alert", text: m("cc.needs_k_notice", { v0: needsK.join(", ") }) })
-    );
+    notices.push(ccNotice("warning", m("cc.needs_k_notice", { v0: needsK.join(", ") }), { className: "cc-needs-k", role: "alert" }));
   const paused = accounts.filter((account) => account.paused).map((account) => ccCredentialName(data, account.auth_index));
-  if (paused.length) notices.push(el("div", { class: "notice show cc-paused", text: m("cc.paused_notice", { v0: paused.join(", ") }) }));
+  if (paused.length) notices.push(ccNotice("info", m("cc.paused_notice", { v0: paused.join(", ") }), { className: "cc-paused" }));
   const unpriced = [...new Set(accounts.flatMap((account) => Object.keys(account.excluded?.unpriced_models || {})))];
   if (unpriced.length)
     notices.push(
-      el(
-        "div",
-        { class: "notice err show cc-unpriced", role: "alert" },
-        el("span", { text: m("cc.unpriced_notice", { v0: unpriced.map(ccModelLabel).join(", ") }) }),
-        " ",
-        el("button", {
+      ccNotice("warning", m("cc.unpriced_notice", { v0: unpriced.map(ccModelLabel).join(", ") }), {
+        className: "cc-unpriced",
+        role: "alert",
+        action: el("button", {
           type: "button",
           class: "link",
           text: m("cc.unpriced_open_prices"),
@@ -349,11 +350,10 @@ function ccProviderNotices(data, draft) {
             guard(() => loadPage(false));
           }
         })
-      )
+      })
     );
   const routing = (data.key_routing || []).filter((hint) => hint.provider === ccState.provider && draft.keys[hint.scope]);
-  if (routing.length)
-    notices.push(el("div", { class: "notice show cc-routing-hint", text: m("cc.routing_hint_notice", { v0: routing.length }) }));
+  if (routing.length) notices.push(ccNotice("info", m("cc.routing_hint_notice", { v0: routing.length }), { className: "cc-routing-hint" }));
   return notices;
 }
 
@@ -739,7 +739,9 @@ function ccKeysSection(data, draft) {
       el(
         "td",
         {},
-        settings.kind ? ccSelect(settings.pool_id || "", pools, (value) => update({ pool_id: value }), { "aria-label": m("cc.pool") }) : "—"
+        settings.kind
+          ? ccSelect(settings.pool_id || "", pools, (value) => update({ pool_id: value }), { "aria-label": m("cc.pool"), searchable: true })
+          : "—"
       ),
       el(
         "td",

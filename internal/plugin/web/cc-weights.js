@@ -80,10 +80,7 @@ function ccWeightsSection(data, draft) {
   const notices = [];
   if (weights.unsplit_segments > 0)
     notices.push(
-      el("p", {
-        class: "notice show cc-weights-unsplit",
-        text: m("cc.weights_unsplit", { v0: weights.unsplit_segments, v1: weights.segments })
-      })
+      ccNotice("info", m("cc.weights_unsplit", { v0: weights.unsplit_segments, v1: weights.segments }), { className: "cc-weights-unsplit" })
     );
 
   // Models of the retained segments, with the items they belong to.
@@ -112,7 +109,7 @@ function ccWeightsSection(data, draft) {
               else if (value) dw.items.find((option) => option.id === value).models.push(usage.model);
               dw.items = dw.items.filter((option) => option.models.length);
             },
-            { "aria-label": m("cc.weights_item_for", { v0: usage.model }) }
+            { "aria-label": m("cc.weights_item_for", { v0: usage.model }), searchable: true }
           );
     return el(
       "tr",
@@ -298,19 +295,16 @@ function ccCalibrationBlock(data, saved) {
   const pick = (field, value) => { ccCalibrationChoice[field] = value; };
   const plainSelect = (value, options, field, label) =>
     el(
-      "span",
-      { class: "native-select" },
-      el(
-        "select",
-        {
-          "aria-label": label,
-          onchange: (event) => {
-            pick(field, event.target.value);
-            renderCC();
-          }
-        },
-        options.map(([optionValue, text]) => el("option", { value: optionValue, text, selected: optionValue === value }))
-      )
+      "ui-select",
+      {
+        "aria-label": label,
+        searchable: true,
+        onchange: (event) => {
+          pick(field, event.target.value);
+          renderCC();
+        }
+      },
+      options.map(([optionValue, text]) => el("option", { value: optionValue, text, selected: optionValue === value }))
     );
   const canStart = ccCalibrationChoice.item && ccCalibrationChoice.account && !running.has(ccCalibrationChoice.account);
   const controls = el(
