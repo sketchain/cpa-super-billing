@@ -43,18 +43,18 @@ const (
 
 func init() {
 	managementEndpoints = append(managementEndpoints,
-		managementEndpoint{http.MethodGet, routeCC, "View the CC split of Claude accounts between API keys", (*App).ccView},
-		managementEndpoint{http.MethodPut, routeCCConfig, "Update the CC split settings", (*App).ccPutSettings},
-		managementEndpoint{http.MethodPost, routeCCRefresh, "Process new usage into CC estimates", (*App).ccRefresh},
-		managementEndpoint{http.MethodGet, routeCCTrend, "View a CC account's retained hourly k evidence and 1% segments", (*App).ccTrend},
-		managementEndpoint{http.MethodPost, routeCCRebuild, "Rebuild CC segments from the retained request history", (*App).ccRebuild},
-		managementEndpoint{http.MethodPost, routeCCCalib, "Start calibrating a model's CC quota weight on an account", (*App).ccStartCalibration},
-		managementEndpoint{http.MethodPost, routeCCStop, "End a running CC quota weight calibration", (*App).ccStopCalibration},
-		managementEndpoint{http.MethodDelete, routeCCCalib, "Delete a CC quota weight calibration", (*App).ccDeleteCalibration},
-		managementEndpoint{http.MethodGet, routeCCEstim, "View the CC estimates on the basis in effect", (*App).ccEstimates},
-		managementEndpoint{http.MethodGet, routeCCFore, "Forecast when CC accounts and pools run out at the recent rate", (*App).ccForecast},
-		managementEndpoint{http.MethodPost, routeCCSim, "Simulate a CC pool's history with fixed keys added, changed or removed (read only)", (*App).ccSimulate},
-		managementEndpoint{http.MethodGet, routeCCUsage, "View each pooled key's daily usage, fixed key cycles and CC refusals", (*App).ccKeyUsage},
+		managementEndpoint{http.MethodGet, routeCC, "View the subscription split of Claude and ChatGPT accounts between API keys", (*App).ccView},
+		managementEndpoint{http.MethodPut, routeCCConfig, "Update the subscription split settings", (*App).ccPutSettings},
+		managementEndpoint{http.MethodPost, routeCCRefresh, "Process new usage into split estimates", (*App).ccRefresh},
+		managementEndpoint{http.MethodGet, routeCCTrend, "View an account's retained hourly k evidence and 1% segments", (*App).ccTrend},
+		managementEndpoint{http.MethodPost, routeCCRebuild, "Rebuild split segments from the retained request history", (*App).ccRebuild},
+		managementEndpoint{http.MethodPost, routeCCCalib, "Start calibrating a model's quota weight on an account", (*App).ccStartCalibration},
+		managementEndpoint{http.MethodPost, routeCCStop, "End a running quota weight calibration", (*App).ccStopCalibration},
+		managementEndpoint{http.MethodDelete, routeCCCalib, "Delete a quota weight calibration", (*App).ccDeleteCalibration},
+		managementEndpoint{http.MethodGet, routeCCEstim, "View the split estimates on the basis in effect", (*App).ccEstimates},
+		managementEndpoint{http.MethodGet, routeCCFore, "Forecast when split accounts and pools run out at the recent rate", (*App).ccForecast},
+		managementEndpoint{http.MethodPost, routeCCSim, "Simulate a pool's history with fixed keys added, changed or removed (read only)", (*App).ccSimulate},
+		managementEndpoint{http.MethodGet, routeCCUsage, "View each pooled key's daily usage, fixed key cycles and split refusals", (*App).ccKeyUsage},
 		managementEndpoint{http.MethodPost, routePriceJSON, "Import custom model prices from a JSON price list", (*App).importPriceList},
 		managementEndpoint{http.MethodGet, routePanel, "View the page display and API key self-service settings", (*App).panelSettings},
 		managementEndpoint{http.MethodPut, routePanel, "Update the page display and API key self-service settings", (*App).putPanelSettings},
@@ -531,7 +531,7 @@ func (a *App) ccDeleteCalibration(req ManagementRequest) ManagementResponse {
 
 // ccNotReady answers a read that needs the first estimate snapshot.
 func ccNotReady() ManagementResponse {
-	response := JSONError(http.StatusServiceUnavailable, "not_ready", "CC estimates are still loading; retry shortly")
+	response := JSONError(http.StatusServiceUnavailable, "not_ready", "Split estimates are still loading; retry shortly")
 	response.Headers.Set("Retry-After", "60")
 	return response
 }
@@ -735,7 +735,7 @@ func (a *App) ccTrend(req ManagementRequest) ManagementResponse {
 		return errorResponse(err)
 	}
 	if !found {
-		return JSONError(http.StatusNotFound, "not_found", "The account is not configured in the CC split")
+		return JSONError(http.StatusNotFound, "not_found", "The account is not configured in the subscription split")
 	}
 	return JSONResponse(http.StatusOK, map[string]any{"trend": trend})
 }
@@ -749,9 +749,9 @@ func (a *App) ccBalance(_ ManagementRequest, access viewAccess) ManagementRespon
 	balance, status := a.cc.Balance(access.Scope)
 	switch status {
 	case ccbilling.BalanceUnassigned:
-		return apiKeyJSONError(http.StatusNotFound, "not_found", "This API key is not assigned to a CC pool")
+		return apiKeyJSONError(http.StatusNotFound, "not_found", "This API key is not assigned to a subscription pool")
 	case ccbilling.BalanceNotReady:
-		response := apiKeyJSONError(http.StatusServiceUnavailable, "not_ready", "CC estimates are still loading; retry shortly")
+		response := apiKeyJSONError(http.StatusServiceUnavailable, "not_ready", "Split estimates are still loading; retry shortly")
 		response.Headers.Set("Retry-After", "60")
 		return response
 	}
@@ -958,7 +958,7 @@ func (a *App) ccRefuseSharedPlan(plan string, shared bool, scopes []string) (Man
 		if view, ok := a.store.KeyViewForScope(scope); ok && view.Preview != "" {
 			label = view.Preview
 		}
-		err := messages.Errorf("Subscription plan %q cannot share quota while CC fixed key %s is bound to it; give the fixed key a plan without shared quota", plan, label)
+		err := messages.Errorf("Subscription plan %q cannot share quota while fixed key %s is bound to it; give the fixed key a plan without shared quota", plan, label)
 		return jsonMessageError(http.StatusConflict, string(billing.KindConflict), messages.FromError(err)), true
 	}
 	return ManagementResponse{}, false

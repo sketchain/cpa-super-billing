@@ -273,11 +273,9 @@ function ccSimResult(data, result) {
   return el(
     "div",
     { class: "cc-sim-result" },
-    el(
-      "p",
-      { class: "notice show cc-sim-approx-note" },
-      m("cc.sim_approximate", { v0: ccWhen(result.from), v1: ccWhen(result.to), v2: result.remainder_keys })
-    ),
+    ccNotice("info", m("cc.sim_approximate", { v0: ccWhen(result.from), v1: ccWhen(result.to), v2: result.remainder_keys }), {
+      className: "cc-sim-approx-note"
+    }),
     summary,
     ccTable(
       [
@@ -338,32 +336,23 @@ function renderCCSim() {
     { class: "cc-sim-pool" },
     el("span", { text: m("cc.sim_pool") }),
     el(
-      "span",
-      { class: "native-select" },
-      el(
-        "select",
-        {
-          "aria-label": m("cc.sim_pool"),
-          onchange: (event) => {
-            Object.assign(ccSimState, { poolID: event.target.value, changes: {}, result: null, error: "" });
-            renderCCSim();
-          }
-        },
-        pools.map((pool) => el("option", { value: pool.id, text: pool.name || pool.id, selected: pool.id === ccSimState.poolID }))
-      )
+      "ui-select",
+      {
+        "aria-label": m("cc.sim_pool"),
+        searchable: true,
+        onchange: (event) => {
+          Object.assign(ccSimState, { poolID: event.target.value, changes: {}, result: null, error: "" });
+          renderCCSim();
+        }
+      },
+      pools.map((pool) => el("option", { value: pool.id, text: pool.name || pool.id, selected: pool.id === ccSimState.poolID }))
     )
   );
   const result =
     ccSimState.result && ccSimState.result.pool_id === ccSimState.poolID
       ? ccSimResult(data, ccSimState.result)
-      : ccSimState.error ? el("div", { class: "notice err show", text: m("cc.sim_failed", { v0: ccSimState.error }) }) : null;
+      : ccSimState.error ? ccNotice("error", m("cc.sim_failed", { v0: ccSimState.error })) : null;
   target.replaceChildren(
-    ...[
-      ...head,
-      ccState.dirty && el("p", { class: "notice show", text: m("cc.sim_saved_settings") }),
-      select,
-      ccSimKeysEditor(data),
-      result
-    ].filter(Boolean)
+    ...[...head, ccState.dirty && ccNotice("info", m("cc.sim_saved_settings")), select, ccSimKeysEditor(data), result].filter(Boolean)
   );
 }

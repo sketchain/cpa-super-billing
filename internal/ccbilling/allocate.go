@@ -239,20 +239,20 @@ func refusal(reason string, retryAt time.Time, format string, args ...any) Decis
 // capUSD and usedCap describe its optional own weekly cap.
 func (p PoolStatus) AdmitRemainder(capUSD *float64, usedCap float64) Decision {
 	if len(p.Accounts) == 0 {
-		return refusal(RefusedNoPool, time.Time{}, "CC pool %q has no account.", p.label())
+		return refusal(RefusedNoPool, time.Time{}, "Pool %q has no account.", p.label())
 	}
 	if p.RemainingWeek <= p.ReservedWeek {
 		return refusal(RefusedWeekly, p.Reset7d,
-			"API key blocked by the CC pool %q weekly reservation: the pool's estimated remaining weekly capacity $%.2f does not exceed the $%.2f reserved for fixed keys.",
+			"API key blocked by the pool %q weekly reservation: the pool's estimated remaining weekly capacity $%.2f does not exceed the $%.2f reserved for fixed keys.",
 			p.label(), p.RemainingWeek, p.ReservedWeek)
 	}
 	if p.FiveHourEnabled && p.RemainingFiveHour <= p.ReservedFiveHour {
 		return refusal(RefusedFiveHour, p.Reset5h,
-			"API key blocked by the CC pool %q 5-hour reservation: the pool's estimated remaining 5-hour capacity $%.2f does not exceed the $%.2f reserved for fixed keys.",
+			"API key blocked by the pool %q 5-hour reservation: the pool's estimated remaining 5-hour capacity $%.2f does not exceed the $%.2f reserved for fixed keys.",
 			p.label(), p.RemainingFiveHour, p.ReservedFiveHour)
 	}
 	if capUSD != nil && usedCap >= *capUSD {
-		return refusal(RefusedCap, p.Reset7d, "API key reached its own weekly cap in CC pool %q: $%.2f of $%.2f used.", p.label(), usedCap, *capUSD)
+		return refusal(RefusedCap, p.Reset7d, "API key reached its own weekly cap in pool %q: $%.2f of $%.2f used.", p.label(), usedCap, *capUSD)
 	}
 	return Decision{Allowed: true}
 }
