@@ -18,7 +18,7 @@ const (
 const (
 	PluginID   = "cpa-super-billing"
 	PluginName = "CPA Super Billing"
-	Version    = "0.3.0"
+	Version    = "0.3.1"
 
 	MenuLabel       = "CPA Super Billing"
 	MenuDescription = "Split Claude and ChatGPT subscription quotas between downstream API keys, and manage their routing, billing, concurrency limits and usage"
