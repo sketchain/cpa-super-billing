@@ -68,7 +68,7 @@ func (m *Manager) Trend(authIndex string) (Trend, bool, error) {
 	case m.loaded.Load() != nil:
 		settings = *m.loaded.Load()
 	default:
-		return Trend{}, false, fmt.Errorf("CC estimates are not loaded")
+		return Trend{}, false, fmt.Errorf("Split estimates are not loaded")
 	}
 	if !slices.Contains(settings.authIndexes(), authIndex) {
 		return Trend{}, false, nil

@@ -516,7 +516,7 @@ func TestAnAccountBelongsToOnePool(t *testing.T) {
 	settings := DefaultSettings()
 	settings.Pools = []Pool{{ID: "a", Name: "A", AuthIndexes: []string{"x", "y"}}, {ID: "b", Name: "B", AuthIndexes: []string{"y"}}}
 	_, err := settings.Normalized()
-	if err == nil || !strings.Contains(err.Error(), `"y" is already in CC pool "A"`) || messages.FromError(err).Key == "" {
+	if err == nil || !strings.Contains(err.Error(), `"y" is already in pool "A"`) || messages.FromError(err).Key == "" {
 		t.Fatalf("duplicate account error = %v (%+v)", err, messages.FromError(err))
 	}
 }

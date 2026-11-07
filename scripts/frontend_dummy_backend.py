@@ -2002,7 +2002,7 @@ def cc_shared_plan_conflict(plan_id, shared, scopes):
     for scope in scopes:
         if cc_fixed_scope(scope):
             return {"error": {"code": "conflict",
-                              "message": f"Subscription plan {json.dumps(plan_id)} cannot share quota while CC fixed key {key_preview(scope)} is bound to it; give the fixed key a plan without shared quota",
+                              "message": f"Subscription plan {json.dumps(plan_id)} cannot share quota while fixed key {key_preview(scope)} is bound to it; give the fixed key a plan without shared quota",
                               "message_key": "backend.cc_shared_plan_has_fixed_key",
                               "message_params": {"v0": json.dumps(plan_id), "v1": key_preview(scope)}}}
     return None
@@ -2261,7 +2261,7 @@ def cc_key_usage_payload():
 def cc_simulate_payload(body):
     pool = next((item for item in CC_SETTINGS["pools"] if item["id"] == body.get("pool_id") and item["auth_indexes"]), None)
     if pool is None:
-        return 400, {"error": {"code": "invalid", "message": "CC pool does not exist", "message_key": "backend.cc_pool_value_does_not_exist",
+        return 400, {"error": {"code": "invalid", "message": "Pool does not exist", "message_key": "backend.cc_pool_value_does_not_exist",
                                "message_params": {"v0": json.dumps(body.get("pool_id", ""))}}}
     added = sum(item.get("weekly_usage_usd", item.get("weekly_usd", 0)) for item in body.get("add", []))
     extra = int(added // 8)
@@ -2644,7 +2644,7 @@ class Handler(BaseHTTPRequestHandler):
                            and plan_is_shared(key["plan_id"])), None)
             if shared is not None:
                 self.send_json(400, {"error": {"code": "invalid",
-                                               "message": f"CC fixed key {shared['preview']} is bound to shared quota plan {json.dumps(shared['plan_id'])}; give it a plan without shared quota",
+                                               "message": f"Fixed key {shared['preview']} is bound to shared quota plan {json.dumps(shared['plan_id'])}; give it a plan without shared quota",
                                                "message_key": "backend.cc_fixed_key_on_shared_plan",
                                                "message_params": {"v0": shared["preview"], "v1": json.dumps(shared["plan_id"])}}})
                 return
