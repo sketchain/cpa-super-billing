@@ -4,6 +4,7 @@
 
 ### 升级须知
 
+- 这是最后一个版本，仓库归档不再更新，后续请使用新项目 [sketchain/cpa-quota](https://github.com/sketchain/cpa-quota)（只做额度估算、额度接口和 safeguard 事件记录，存储使用 PostgreSQL）。现有用户可继续使用 v0.3.2。
 - 不改数据库结构，无需迁移，可直接替换插件。
 
 ### 后端

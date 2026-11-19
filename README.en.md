@@ -1,3 +1,10 @@
+> [!CAUTION]
+> **This project is archived and no longer maintained.** v0.3.2 is the final release.
+>
+> Please use the successor [sketchain/cpa-quota](https://github.com/sketchain/cpa-quota): it only provides quota estimation, a quota API and safeguard event logging, stores data in PostgreSQL, and has no per-key billing, plans or admission control, so you need to run your own downstream.
+>
+> Existing users can keep using v0.3.2, but no further features or security fixes will be released.
+
 <div align="center">
   <h1>CPA Super Billing</h1>
   <p><strong>A <a href="https://github.com/router-for-me/CLIProxyAPI">CLIProxyAPI</a> plugin that splits Claude and ChatGPT (Codex) subscription quotas between downstream API keys.</strong></p>
