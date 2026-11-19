@@ -1,3 +1,10 @@
+> [!CAUTION]
+> **本项目已归档，不再更新。** v0.3.2 是最后一个版本。
+>
+> 后续请使用新项目 [sketchain/cpa-quota](https://github.com/sketchain/cpa-quota)：只做额度估算、额度接口和 safeguard 事件记录，存储改用 PostgreSQL，不含 Key 计费、套餐、放行拦截，需要自建下游。
+>
+> 现有用户可以继续使用 v0.3.2，但不会再有功能更新或安全修复。
+
 <div align="center">
   <h1>CPA Super Billing</h1>
   <p><strong>把 Claude 和 ChatGPT（Codex）订阅账号的额度分给多个下游 API Key 的 <a href="https://github.com/router-for-me/CLIProxyAPI">CLIProxyAPI</a> 插件。</strong></p>

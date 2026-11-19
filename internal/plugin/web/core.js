@@ -210,8 +210,8 @@ function showDatabaseAlert(state) {
   if (next === databaseAlertState) return;
   databaseAlertState = next;
   const target = $("admin-database-alert");
-  target.classList.toggle("show", !!next);
-  if (next) setText(target, m(DATABASE_ALERT_MESSAGES[next])); else target.replaceChildren();
+  // An inline notice, not a toast: it stays until a response stops reporting the alert.
+  target.replaceChildren(...(next ? [notice(m(DATABASE_ALERT_MESSAGES[next]), "error")] : []));
 }
 
 async function api(method, path, body, opts) {

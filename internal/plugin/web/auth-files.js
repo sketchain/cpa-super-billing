@@ -39,7 +39,7 @@ function refreshSelectedAuthQuotas(files) {
       const error = owner.authQuotaErrors.get(file.auth_index);
       if (error) throw new UIError(error);
     },
-    { concurrency: AUTH_QUOTA_BATCH_CONCURRENCY, refresh: () => persistAuthQuotaCache(false) }
+    { concurrency: AUTH_QUOTA_BATCH_CONCURRENCY, refresh: () => persistAuthQuotaCache(false), success: m("ui.quotas_refreshed") }
   );
 }
 
@@ -460,7 +460,7 @@ function renderAuthFiles(account) {
     selection: account ? null : authSelection,
     headers: [
       m("ui.auth_files"),
-      ...(!account ? [{ label: "", class: "credential-edit-column" }] : []),
+      ...(!account ? [""] : []),
       m("ui.plan"),
       ...credentialMetricHeaders(),
       { label: m("ui.quota"), class: "credential-quota-column" },
@@ -487,7 +487,7 @@ function renderAuthFileRow(file, account) {
         "button",
         {
           type: "button",
-          class: "labeled-icon-button round-icon-button",
+          class: "icon-action",
           "aria-label": m("ui.reset_quota"),
           "data-tip": m("ui.reset_quota"),
           disabled: !canResetAuthQuota(file, account),
@@ -499,7 +499,7 @@ function renderAuthFileRow(file, account) {
       "button",
       {
         type: "button",
-        class: "labeled-icon-button round-icon-button" + (loading ? " loading" : ""),
+        class: "icon-action" + (loading ? " loading" : ""),
         disabled: !canRefreshAuthQuota(file) || loading || ui.bulk.dataset.loading === "true" || (!account && authSelection.running),
         "aria-label": m("ui.update_quotas"),
         "data-tip": authQuotaRefreshTitle(file) || m("ui.update_quotas"),
@@ -626,7 +626,10 @@ async function setAuthFileEnabled(file, enabled) {
 
 function setSelectedAuthFilesEnabled(files, enabled) {
   const owner = adminUIState;
-  return authSelection.run(files, (file) => patchAuthFileStatus(file, enabled), { refresh: () => refreshAuthFileStatuses(files, owner) });
+  return authSelection.run(files, (file) => patchAuthFileStatus(file, enabled), {
+    refresh: () => refreshAuthFileStatuses(files, owner),
+    success: enabled ? m("ui.auth_files_enabled") : m("ui.auth_files_disabled")
+  });
 }
 
 const AUTH_QUOTA_TIMEOUT_MS = 65000;
@@ -699,17 +702,10 @@ async function resetAuthQuota(file, account) {
       if (!authQuotaCacheCurrent(account, owner, generation, index)) return;
       await refreshAuthQuota(file, account);
       if (authQuotaCacheCurrent(account, owner, generation, index)) {
-        const failed = owner.authQuotaErrors.has(index);
-        if (!cooldownCleared) {
-          notify(m("ui.quota_reset_but_cooldown_clear_failed"), "err");
-          return;
-        }
-        notify(
-          failed
-            ? m("ui.quota_reset_but_refresh_failed_please_update_the_quota_manually")
-            : m("ui.reset_quota_for_value", { v0: file.name }),
-          failed ? "err" : "ok"
-        );
+        if (!cooldownCleared) notify(m("ui.quota_reset_but_cooldown_clear_failed"), "warning");
+        else if (owner.authQuotaErrors.has(index))
+          notify(m("ui.quota_reset_but_refresh_failed_please_update_the_quota_manually"), "warning");
+        else notify(m("ui.auth_quota_reset"));
       }
     },
     m("ui.confirm_reset")

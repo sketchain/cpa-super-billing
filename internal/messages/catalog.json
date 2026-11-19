@@ -613,7 +613,7 @@
     "key": "backend.cleanup_age_must_be_an_integer",
     "formats": []
   },
-  "API key blocked by the CC pool %q weekly reservation: the pool's estimated remaining weekly capacity $%.2f does not exceed the $%.2f reserved for fixed keys.": {
+  "API key blocked by the pool %q weekly reservation: the pool's estimated remaining weekly capacity $%.2f does not exceed the $%.2f reserved for fixed keys.": {
     "key": "backend.cc_blocked_weekly_reserve",
     "formats": [
       "%q",
@@ -621,7 +621,7 @@
       "%.2f"
     ]
   },
-  "API key blocked by the CC pool %q 5-hour reservation: the pool's estimated remaining 5-hour capacity $%.2f does not exceed the $%.2f reserved for fixed keys.": {
+  "API key blocked by the pool %q 5-hour reservation: the pool's estimated remaining 5-hour capacity $%.2f does not exceed the $%.2f reserved for fixed keys.": {
     "key": "backend.cc_blocked_five_hour_reserve",
     "formats": [
       "%q",
@@ -629,7 +629,7 @@
       "%.2f"
     ]
   },
-  "API key reached its own weekly cap in CC pool %q: $%.2f of $%.2f used.": {
+  "API key reached its own weekly cap in pool %q: $%.2f of $%.2f used.": {
     "key": "backend.cc_blocked_weekly_cap",
     "formats": [
       "%q",
@@ -637,18 +637,18 @@
       "%.2f"
     ]
   },
-  "API key blocked because the CC estimates have not loaded yet; remainder keys wait until the pool's reservations can be computed.": {
+  "API key blocked because the split estimates have not loaded yet; remainder keys wait until the pool's reservations can be computed.": {
     "key": "backend.cc_blocked_not_loaded",
     "formats": []
   },
-  "Account %q is already in CC pool %q; an account can belong to only one pool": {
+  "Account %q is already in pool %q; an account can belong to only one pool": {
     "key": "backend.cc_account_value_already_in_pool_value",
     "formats": [
       "%q",
       "%q"
     ]
   },
-  "Fixed keys %s and %s share subscription plan %q but belong to different CC pools; give each pool its own plan": {
+  "Fixed keys %s and %s share subscription plan %q but belong to different pools; give each pool its own plan": {
     "key": "backend.cc_fixed_keys_share_plan_across_pools",
     "formats": [
       "%s",
@@ -656,21 +656,21 @@
       "%q"
     ]
   },
-  "CC fixed key %s is bound to shared quota plan %q; give it a plan without shared quota": {
+  "Fixed key %s is bound to shared quota plan %q; give it a plan without shared quota": {
     "key": "backend.cc_fixed_key_on_shared_plan",
     "formats": [
       "%s",
       "%q"
     ]
   },
-  "Subscription plan %q cannot share quota while CC fixed key %s is bound to it; give the fixed key a plan without shared quota": {
+  "Subscription plan %q cannot share quota while fixed key %s is bound to it; give the fixed key a plan without shared quota": {
     "key": "backend.cc_shared_plan_has_fixed_key",
     "formats": [
       "%q",
       "%s"
     ]
   },
-  "CC fixed key %s is bound to shared quota plan %q; its weekly reservation counts the whole shared pool and overstates the pool's reservations. Bind it to a plan without shared quota.": {
+  "Fixed key %s is bound to shared quota plan %q; its weekly reservation counts the whole shared pool and overstates the pool's reservations. Bind it to a plan without shared quota.": {
     "key": "backend.cc_fixed_key_shared_plan_warning",
     "formats": [
       "%s",
@@ -681,7 +681,7 @@
     "key": "backend.auth_index_is_required",
     "formats": []
   },
-  "The account is not configured in the CC split": {
+  "The account is not configured in the subscription split": {
     "key": "backend.the_account_is_not_configured_in_the_cc_split",
     "formats": []
   },
@@ -698,7 +698,7 @@
       "%q"
     ]
   },
-  "Account %q is not configured in the CC split": {
+  "Account %q is not configured in the subscription split": {
     "key": "backend.cc_account_value_not_configured",
     "formats": [
       "%q"
@@ -710,7 +710,7 @@
       "%q"
     ]
   },
-  "CC pool %q does not exist": {
+  "Pool %q does not exist": {
     "key": "backend.cc_pool_value_does_not_exist",
     "formats": [
       "%q"
@@ -742,7 +742,7 @@
     "key": "backend.invalid_quota_cycle_data",
     "formats": []
   },
-  "CC pool %q has no account.": {
+  "Pool %q has no account.": {
     "key": "backend.cc_pool_value_has_no_account",
     "formats": [
       "%q"

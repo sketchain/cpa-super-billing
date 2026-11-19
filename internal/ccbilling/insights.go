@@ -333,7 +333,7 @@ func WeeklyCycles(resets []ResetSeen, current, from, now time.Time) []Cycle {
 
 // errNotLoaded reports a read that needs an estimate snapshot before the
 // first one exists.
-var errNotLoaded = errors.New("CC estimates are still loading; retry shortly")
+var errNotLoaded = errors.New("Split estimates are still loading; retry shortly")
 
 // IsNotLoaded reports whether err means no estimate snapshot exists yet.
 func IsNotLoaded(err error) bool { return errors.Is(err, errNotLoaded) }

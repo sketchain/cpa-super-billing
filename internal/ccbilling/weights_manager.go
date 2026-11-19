@@ -457,7 +457,7 @@ func (m *Manager) StartCalibration(itemID, authIndex string) (Calibration, error
 	var calibration Calibration
 	err := m.withDB(func(db *sql.DB) error {
 		if !slices.Contains(m.settings.authIndexes(), authIndex) {
-			return invalidf("Account %q is not configured in the CC split", authIndex)
+			return invalidf("Account %q is not configured in the subscription split", authIndex)
 		}
 		item, ok := m.settings.provider(m.settings.AccountProvider(authIndex)).Weights.item(itemID)
 		if !ok {

@@ -459,10 +459,10 @@ func positive(value float64) bool { return finite(value) && value > 0 }
 func validateSimulation(request SimRequest, settings Settings) (Pool, error) {
 	pool, ok := settings.pool(strings.TrimSpace(request.PoolID))
 	if !ok {
-		return Pool{}, invalidf("CC pool %q does not exist", request.PoolID)
+		return Pool{}, invalidf("Pool %q does not exist", request.PoolID)
 	}
 	if len(pool.AuthIndexes) == 0 {
-		return Pool{}, invalidf("CC pool %q has no Claude account.", pool.ID)
+		return Pool{}, invalidf("Pool %q has no Claude account.", pool.ID)
 	}
 	if len(request.Add) > maxSimulationNewKeys {
 		return Pool{}, invalidf("A simulation can add at most %d fixed keys", maxSimulationNewKeys)

@@ -98,7 +98,7 @@ for (const role of ["admin", "account"]) {
 
 function renderDisplayCurrency() {
   const { rate } = moneyChoice();
-  const control = $((currentRole === "account" ? "account-" : "") + "display-currency-control");
+  const control = $((currentRole === "account" ? "account-" : "") + "display-currency");
   setTextAttribute(control, "data-tip", rate ? m("ui.exchange_rate_value", { v0: rate }) : "");
 }
 
@@ -129,10 +129,7 @@ async function setLoginMode(mode, preserveError) {
   setTextAttribute($("gate-key"), "placeholder", account ? m("ui.enter_api_key") : m("ui.enter_management_key"));
   setText($("gate-submit"), account ? m("ui.view_my_usage") : m("ui.open_management_console"));
   $("gate-key").value = "";
-  if (!preserveError) {
-    setText($("gate-error"), "");
-    $("gate-error").className = "notice err";
-  }
+  if (!preserveError) $("gate-error").replaceChildren();
   const saved = await recalledCredential(loginMode);
   if (ticket !== loginModeRequest) return;
   if (saved) setTextAttribute($("gate-key"), "placeholder", m("ui.key_remembered"));
@@ -142,7 +139,7 @@ async function setLoginMode(mode, preserveError) {
 function showGate(mode, error) {
   sessionGeneration++;
   clearTableSelection();
-  hideNotice();
+  clearToasts();
   closeHoverTooltip();
   try { sessionStorage.removeItem(SESSION_CREDENTIAL_PREFIX + mode); } catch (_) {}
   for (const dialog of document.querySelectorAll("dialog[open]")) dialog.close();
@@ -158,9 +155,7 @@ function showGate(mode, error) {
   $("app").classList.add("hidden");
   $("account-app").classList.add("hidden");
   $("gate").classList.remove("hidden");
-  const box = $("gate-error");
-  setText(box, error || "");
-  box.className = error ? "notice err show" : "notice err";
+  $("gate-error").replaceChildren(...(error ? [notice(error, "error")] : []));
   setLoginMode(mode, true);
 }
 
@@ -170,8 +165,7 @@ async function submitLogin() {
   let key = $("gate-key").value.trim();
   if (!key) key = await recalledCredential(role);
   if (!key) {
-    setText($("gate-error"), role === "account" ? m("ui.enter_an_api_key") : m("ui.enter_a_management_key"));
-    $("gate-error").className = "notice err show";
+    $("gate-error").replaceChildren(notice(role === "account" ? m("ui.enter_an_api_key") : m("ui.enter_a_management_key"), "error"));
     return;
   }
   $("gate-submit").disabled = true;
@@ -180,8 +174,7 @@ async function submitLogin() {
     if (generation !== sessionGeneration) return;
     try { await saveCredential(role, key, $("gate-remember").checked); } catch (err) {
       if (generation !== sessionGeneration) return;
-      const message = m("ui.signed_in_but_the_session_was_not_saved_value", { v0: err.message || err });
-      notify(message, "err");
+      notify(m("ui.signed_in_but_the_session_was_not_saved_value", { v0: err.message || err }), "warning");
     }
     $("gate-key").value = "";
   } catch (err) {
@@ -342,7 +335,7 @@ let tabLayoutFrame = 0;
 
 // The select stands in for the tab bar when the tabs do not fit; it mirrors their labels and active tab.
 for (const row of PAGE_TAB_ROWS) {
-  const select = row.querySelector(".page-tab-select > select");
+  const select = row.querySelector(".page-tab-select");
   const tabs = Array.from(row.querySelectorAll(".tabs > button"));
   const tabName = (button) => button.dataset.tab || button.dataset.accountTab;
   select.replaceChildren(...tabs.map((button) => el("option", { value: tabName(button) }, window.billingI18n.boundText(button))));
@@ -359,7 +352,7 @@ function updatePageTabLayouts() {
     if (!row.getClientRects().length) continue;
     const switcher = row.querySelector(".page-tab-switcher");
     const tabBar = switcher.querySelector(".tabs");
-    const select = switcher.querySelector("select");
+    const select = switcher.querySelector(".page-tab-select");
     const compact = tabBar.scrollWidth > switcher.clientWidth + 1;
     const focusedTab = tabBar.contains(document.activeElement);
     const focusedSelect = document.activeElement === select;
@@ -394,13 +387,13 @@ function updatePageControls(account, page) {
   actions.dataset.page = activeTab(account);
   actions.classList.toggle("has-key-filter", keyed);
   $(prefix + "shared-time-filter").classList.toggle("hidden", !page.timeRange);
-  $(prefix + "display-currency-control").classList.toggle("hidden", !page.currency);
-  $(prefix + "auto-refresh-control").classList.toggle("hidden", !page.autoRefresh);
+  $(prefix + "display-currency").classList.toggle("hidden", !page.currency);
+  $(prefix + "auto-refresh").classList.toggle("hidden", !page.autoRefresh);
   $(prefix + "request-event-columns").classList.toggle("hidden", !page.eventColumns);
   $(prefix + "events-export").classList.toggle("hidden", !page.exportEvents);
   $(prefix + "event-actions").classList.toggle("hidden", !page.eventColumns && !page.exportEvents);
   if (!account) {
-    $("shared-key-filter").classList.toggle("hidden", !keyed);
+    $("analysis-key").classList.toggle("hidden", !keyed);
     $("events-clear").classList.toggle("hidden", !page.cleanupEvents);
   }
   if (!page.timeRange) closeSharedTimePopover(account);
@@ -474,7 +467,10 @@ function updateThemeButtons() {
 function updateThemedVisuals() {
   updateThemeButtons();
   if (currentRole && activeTab(currentRole === "account") === "analysis") renderAnalysis(currentRole === "account");
-  if (currentRole === "admin" && activeTab(false) === "split") renderCCTrend();
+  if (currentRole === "admin" && activeTab(false) === "split") {
+    renderCCTrend();
+    renderCCUsage();
+  }
 }
 
 document.querySelectorAll('[data-page-action="logout"]').forEach((button) => {
@@ -488,49 +484,6 @@ document.querySelectorAll('[data-page-action="logout"]').forEach((button) => {
       showGate(role, "");
     });
 });
-function attachSelectionMenu(button, label, choices, select) {
-  const menu = el("div", { class: "selection-menu", popover: "auto", role: "menu", "aria-label": label });
-  button.setAttribute("aria-haspopup", "menu");
-  button.setAttribute("aria-expanded", "false");
-  button.onclick = () => {
-    if (menu.matches(":popover-open")) return menu.hidePopover();
-    menu.replaceChildren(
-      ...choices().map((item) =>
-        el("button", {
-          type: "button",
-          class: "selection-option",
-          role: "menuitemradio",
-          "aria-checked": String(item.selected),
-          text: item.label,
-          onclick: () => {
-            menu.hidePopover();
-            button.focus();
-            select(item.value);
-          }
-        })
-      )
-    );
-    menu.showPopover();
-    positionAnchoredPopover(menu, button, { align: "end" });
-    menu.querySelector('[aria-checked="true"]').focus({ preventScroll: true });
-  };
-  menu.addEventListener("toggle", (event) => button.setAttribute("aria-expanded", String(event.newState === "open")));
-  menu.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      menu.hidePopover();
-      button.focus();
-      return;
-    }
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-    event.preventDefault();
-    const items = Array.from(menu.querySelectorAll("button"));
-    const index = items.indexOf(document.activeElement);
-    items[(index + (event.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus();
-  });
-  button.after(menu);
-}
 document.querySelectorAll(".standalone-actions").forEach((group) => {
   const language = el(
     "button",
@@ -538,13 +491,13 @@ document.querySelectorAll(".standalone-actions").forEach((group) => {
     actionIcon("globe")
   );
   group.prepend(language);
-  attachSelectionMenu(
+  attachChoiceMenu(
     language,
     m("language.select"),
     () => window.billingI18n.languages().map((item) => ({ ...item, selected: item.value === window.billingI18n.current() })),
     (value) => window.billingI18n.select(value)
   );
-  attachSelectionMenu(
+  attachChoiceMenu(
     group.querySelector('[data-page-action="theme"]'),
     m("ui.switch_theme"),
     () =>

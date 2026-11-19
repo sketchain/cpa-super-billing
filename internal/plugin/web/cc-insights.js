@@ -181,7 +181,7 @@ function ccForecastWindowInput(name, label) {
         const value = Number(event.target.value);
         if (!Number.isInteger(value) || value < low || value > high) {
           event.target.value = String(ccForecastState[name]);
-          notify(m("cc.forecast_window_invalid", { v0: low, v1: high }), "err");
+          notify(m("cc.forecast_window_invalid", { v0: low, v1: high }), "error");
           return;
         }
         ccForecastState[name] = value;

@@ -985,7 +985,7 @@ func (m *Manager) View() (View, error) {
 		settings := m.loaded.Load()
 		if settings == nil {
 			if refreshErr == nil {
-				refreshErr = fmt.Errorf("CC estimates are not loaded")
+				refreshErr = fmt.Errorf("Split estimates are not loaded")
 			}
 			return View{}, refreshErr
 		}
@@ -1135,7 +1135,7 @@ func (m *Manager) admitUnloaded(scope string) Decision {
 		return Decision{Allowed: true}
 	}
 	return refusal(RefusedNotLoaded, m.host.Now().Add(time.Minute),
-		"API key blocked because the CC estimates have not loaded yet; remainder keys wait until the pool's reservations can be computed.")
+		"API key blocked because the split estimates have not loaded yet; remainder keys wait until the pool's reservations can be computed.")
 }
 
 // checkSharedPlans refuses fixed keys that share a subscription plan across
@@ -1156,7 +1156,7 @@ func (m *Manager) checkSharedPlans(settings Settings) error {
 			continue
 		}
 		if info.SharedQuota {
-			return messages.Errorf("CC fixed key %s is bound to shared quota plan %q; give it a plan without shared quota",
+			return messages.Errorf("Fixed key %s is bound to shared quota plan %q; give it a plan without shared quota",
 				keyLabel(scope, m.host), info.PlanID)
 		}
 		previous, seen := plans[info.PlanID]
@@ -1165,7 +1165,7 @@ func (m *Manager) checkSharedPlans(settings Settings) error {
 			continue
 		}
 		if previous.pool != key.PoolID {
-			return messages.Errorf("Fixed keys %s and %s share subscription plan %q but belong to different CC pools; give each pool its own plan",
+			return messages.Errorf("Fixed keys %s and %s share subscription plan %q but belong to different pools; give each pool its own plan",
 				keyLabel(previous.scope, m.host), keyLabel(scope, m.host), info.PlanID)
 		}
 	}
@@ -1217,7 +1217,7 @@ func sharedPlanWarnings(snap *snapshot) []messages.Message {
 	warnings := []messages.Message{}
 	for _, scope := range sortedKeys(shared) {
 		info := shared[scope]
-		warnings = append(warnings, messages.New("CC fixed key %s is bound to shared quota plan %q; its weekly reservation counts the whole shared pool and overstates the pool's reservations. Bind it to a plan without shared quota.", fixedKeyLabel(scope, info), info.PlanID))
+		warnings = append(warnings, messages.New("Fixed key %s is bound to shared quota plan %q; its weekly reservation counts the whole shared pool and overstates the pool's reservations. Bind it to a plan without shared quota.", fixedKeyLabel(scope, info), info.PlanID))
 	}
 	return warnings
 }

@@ -301,7 +301,7 @@ func (s Settings) Normalized() (Settings, error) {
 			if index = strings.TrimSpace(index); index != "" && !slices.Contains(indexes, index) {
 				// An account's capacity can only be shared out once.
 				if owner, taken := owners[index]; taken {
-					return Settings{}, messages.Errorf("Account %q is already in CC pool %q; an account can belong to only one pool", index, owner)
+					return Settings{}, messages.Errorf("Account %q is already in pool %q; an account can belong to only one pool", index, owner)
 				}
 				owners[index] = label
 				indexes = append(indexes, index)

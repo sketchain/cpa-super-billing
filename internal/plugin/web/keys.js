@@ -110,7 +110,7 @@ function withFixedKeyResetWarning(note, keys) {
     "div",
     { class: "reset-confirmation" },
     el("div", { text: note }),
-    el("div", { class: "notice err show cc-reset-warning", text: m("ui.cc_fixed_key_reset_warning", { v0: fixed }) })
+    ccNotice("warning", m("ui.cc_fixed_key_reset_warning", { v0: fixed }), { className: "cc-reset-warning" })
   );
 }
 
@@ -167,8 +167,10 @@ function renderKeys() {
       const saving = adminUIState.keySubmissions.has(view.scope) || keySelection.running;
       const name = apiKeyIdentity(view).primary;
       const select = el(
-        "select",
+        "ui-select",
         {
+          class: "key-plan-select",
+          searchable: true,
           name: "plan_id",
           disabled: deleted || saving || !plans,
           "data-tip": !plans ? resources.admin.plans.error || m("ui.loading_subscription_plans") : null,
@@ -198,7 +200,7 @@ function renderKeys() {
         ? CONCURRENCY_OPTIONS
         : [...CONCURRENCY_OPTIONS, currentConcurrencyLimit].sort((a, b) => a - b);
       const concurrencySelect = el(
-        "select",
+        "ui-select",
         {
           "aria-label": m("ui.maximum_concurrent_requests_for_value", { v0: name }),
           disabled: deleted || saving,
@@ -230,7 +232,7 @@ function renderKeys() {
       const concurrency = el(
         "div",
         { class: "concurrency-editor" },
-        el("span", { class: "native-select" }, concurrencySelect),
+        concurrencySelect,
         el("span", { class: "small muted", text: m("ui.current_value", { v0: int(view.current_concurrency) }) })
       );
 
@@ -249,7 +251,7 @@ function renderKeys() {
             ]
           })
         ),
-        el("td", {}, el("span", { class: "native-select key-plan-select" }, select)),
+        el("td", {}, select),
         el("td", {}, renderKeyRoutes(view)),
         el("td", {}, concurrency),
         el("td", {}, usage),
@@ -396,14 +398,14 @@ async function importPanelLabels(load) {
     }
   } catch (err) {
     if (err instanceof AuthError || err instanceof StaleRequestError) throw err;
-    throw new UIError(m("ui.imported_value_labels_import_interrupted_value", { v0: imported, v1: err.message || err }));
+    throw new UIError(m("ui.label_import_stopped", { count: imported, error: err.message || err }));
   } finally { if (imported && generation === sessionGeneration) renderPage(); }
   const skipped = labels.length - imported - unchanged;
   notify(
-    m("ui.imported_value_labelsvaluevalue", {
-      v0: imported,
-      v1: unchanged ? m("ui.value_unchanged", { v0: unchanged }) : "",
-      v2: skipped ? m("ui.value_unmatched_labels_skipped", { v0: skipped }) : ""
+    m("ui.imported_labels", {
+      count: imported,
+      unchanged: unchanged ? m("ui.labels_unchanged", { count: unchanged }) : "",
+      skipped: skipped ? m("ui.labels_unmatched", { count: skipped }) : ""
     })
   );
 }
@@ -456,6 +458,6 @@ $("keys-reset-all").onclick = () =>
     undefined,
     async () => {
       const result = await mutateAdmin("POST", "/keys/reset", { mode: "global" });
-      notify(result.keys || result.pools ? m("ui.subscription_quota_reset") : m("ui.no_quotas_to_reset"));
+      if (result.keys || result.pools) notify(m("ui.subscription_quota_reset")); else notify(m("ui.no_quotas_to_reset"), "info");
     }
   );

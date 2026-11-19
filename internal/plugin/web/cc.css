@@ -4,7 +4,7 @@
 .cc-section > h3 { margin: 0 0 4px; font-size: 15px; }
 .cc-section > p.muted { margin: 0 0 10px; }
 .cc-table td, .cc-table th { vertical-align: middle; }
-.cc-table .native-select select { min-width: 120px; }
+.cc-table ui-select { min-width: 120px; }
 .cc-number { width: 104px; }
 .cc-pool { display: grid; gap: 10px; margin-bottom: 10px; }
 .cc-pool-name { flex: 1 1 200px; min-width: 0; max-width: 320px; }
@@ -12,7 +12,7 @@
 .cc-check { display: inline-flex; align-items: center; gap: 6px; }
 .cc-params { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px 18px; }
 .cc-param { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.cc-param .cc-number, .cc-param .native-select, .cc-param select { width: 100%; }
+.cc-param .cc-number, .cc-param ui-select { width: 100%; }
 .cc-param-label { font-weight: 600; }
 .cc-section details { margin-bottom: 8px; }
 .cc-section summary { cursor: pointer; padding: 4px 0; }
@@ -52,7 +52,6 @@
 .cc-param-switch { align-items: flex-start; max-width: 100%; padding-top: 6px; padding-bottom: 6px; white-space: normal; }
 .cc-param-switch > .switch-control { margin-top: 2px; }
 .cc-param-switch > span:last-child { min-width: 0; overflow-wrap: anywhere; }
-.cc-stale { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .reset-confirmation { display: grid; gap: 10px; white-space: normal; }
 .cc-trend-toolbar {
   display: flex;
@@ -98,7 +97,7 @@
 .cc-basis-active { font-weight: 600; background: var(--app-accent-soft, var(--bg-hover)); }
 @media (max-width: 640px) {
   .cc-calibration-controls > * { flex: 1 1 100%; }
-  .cc-calibration-controls .native-select, .cc-calibration-controls select { width: 100%; }
+  .cc-calibration-controls ui-select { width: 100%; }
 }
 .cc-forecast-windows { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .cc-forecast-window { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); }
@@ -121,7 +120,7 @@
   border-radius: 2px;
 }
 .cc-sim-pool { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0 10px; }
-.cc-sim-pool .native-select select { min-width: 160px; }
+.cc-sim-pool ui-select { min-width: 160px; }
 .cc-sim-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
 .cc-sim-removed > td { opacity: 0.55; }
 .cc-sim-removed > td:last-child { opacity: 1; }
